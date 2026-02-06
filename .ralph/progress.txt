@@ -23,3 +23,11 @@
 - Clamps limit/offset for safe pagination
 - Filters out sqlite_sequence internal table from getTables results
 - Files changed: lib/database.ts (new), package.json, package-lock.json
+
+## database-api (completed)
+- Created app/api/database/route.ts - GET returns {tables: [{name, rowCount}]}
+- Created app/api/database/[table]/route.ts - GET with ?limit=50&offset=0 returns {rows, total, columns}
+- Table name validated via lib/database.ts whitelist (returns 400 for invalid tables)
+- Pagination params parsed from query string with defaults (limit=50, offset=0)
+- Follows existing API route patterns (NextResponse.json, try/catch error handling)
+- Files changed: app/api/database/route.ts (new), app/api/database/[table]/route.ts (new)
