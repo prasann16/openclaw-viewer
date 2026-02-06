@@ -88,3 +88,13 @@
 - All values rounded to 1 decimal place, graceful fallback to 0 on errors
 - Follows existing API patterns (NextResponse.json, try/catch, Promise.all for concurrent ops)
 - Files changed: app/api/system/route.ts (new)
+
+## system-ui (completed)
+- Created components/system-stats.tsx with system resource monitoring UI
+- Fetches /api/system on mount and every 5s (auto-refresh)
+- Three color-coded progress bars (green/yellow/red based on usage thresholds) for CPU, RAM, Disk
+- Labels show percentage and GB used/total
+- Server uptime formatted as "X days, Y hours, Z minutes"
+- Loading, error states matching other viewer component patterns
+- Used custom progress bar instead of adding shadcn Progress component (simpler, no new dependency)
+- Files changed: components/system-stats.tsx (new)
