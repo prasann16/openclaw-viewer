@@ -55,3 +55,13 @@
 - Handles error and empty states
 - Accepts selectedPath and onSelect props from parent
 - Files changed: components/sidebar.tsx (new)
+
+## Task: main-page
+- Rewrote app/page.tsx as client component with sidebar + viewer layout
+- Flex layout: sidebar (w-64, hidden on mobile) + main content area (flex-1, overflow-auto)
+- Selected file path stored in URL query param (?file=...) for refresh persistence
+- Fetches file content from /api/file when selection changes
+- Shows "Select a file" placeholder with FileText icon when nothing selected
+- Error state displayed when file fetch fails
+- Wrapped in Suspense for useSearchParams compatibility
+- Files changed: app/page.tsx (rewritten)
