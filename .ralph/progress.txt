@@ -40,3 +40,10 @@
 - Depth-based indentation for nested items
 - Sorting handled by getFileTree() in lib/files.ts (folders first, alpha)
 - Files changed: components/file-tree.tsx (new)
+
+## Task: markdown-viewer
+- Installed react-markdown, remark-gfm, rehype-highlight, @tailwindcss/typography
+- Added @tailwindcss/typography plugin to globals.css
+- Created components/markdown-viewer.tsx using ReactMarkdown with remark-gfm and rehype-highlight
+- Uses prose-invert for dark mode, github-dark highlight.js theme
+- Files changed: components/markdown-viewer.tsx (new), app/globals.css (modified), package.json (modified)
