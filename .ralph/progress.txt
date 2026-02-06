@@ -98,3 +98,14 @@
 - Loading, error states matching other viewer component patterns
 - Used custom progress bar instead of adding shadcn Progress component (simpler, no new dependency)
 - Files changed: components/system-stats.tsx (new)
+
+## integrate-sections (completed)
+- Updated app/page.tsx to render different components based on activeTab state
+- "files" tab shows existing file tree + viewer (unchanged behavior)
+- "database" tab renders DatabaseViewer
+- "cron" tab renders CronViewer
+- "logs" tab renders LogsViewer
+- "system" tab renders SystemStats
+- All sections use consistent layout within the same main content area
+- Added imports for all four new viewer components
+- Files changed: app/page.tsx

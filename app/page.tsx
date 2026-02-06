@@ -6,6 +6,10 @@ import { Sidebar } from "@/components/sidebar";
 import type { TabId } from "@/components/nav-tabs";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { CodeViewer } from "@/components/code-viewer";
+import { DatabaseViewer } from "@/components/database-viewer";
+import { CronViewer } from "@/components/cron-viewer";
+import { LogsViewer } from "@/components/logs-viewer";
+import { SystemStats } from "@/components/system-stats";
 import { FileText, Loader2, Menu, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,66 +95,76 @@ function ViewerContent() {
         </div>
 
         <main className="flex-1 overflow-auto p-8">
-          {!selectedPath ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-              <FileText className="h-12 w-12" />
-              <p>Select a file to view</p>
-            </div>
-          ) : loading ? (
-            <div className="flex h-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : error ? (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-destructive">{error}</p>
-            </div>
-          ) : content !== null ? (
-            <div className="mx-auto max-w-3xl">
-              {selectedPath?.endsWith(".md") ? (
-                isEditing ? (
-                  <div className="flex h-full flex-col gap-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(false)}
-                        disabled={isSaving}
-                      >
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                        {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                        {isSaving ? "Saving..." : "Save"}
-                      </Button>
+          {activeTab === "files" ? (
+            !selectedPath ? (
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+                <FileText className="h-12 w-12" />
+                <p>Select a file to view</p>
+              </div>
+            ) : loading ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-destructive">{error}</p>
+              </div>
+            ) : content !== null ? (
+              <div className="mx-auto max-w-3xl">
+                {selectedPath?.endsWith(".md") ? (
+                  isEditing ? (
+                    <div className="flex h-full flex-col gap-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsEditing(false)}
+                          disabled={isSaving}
+                        >
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                          {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                          {isSaving ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                      <textarea
+                        className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                      />
                     </div>
-                    <textarea
-                      className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                  </div>
+                  ) : (
+                    <>
+                      <div className="mb-4 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditContent(content);
+                            setIsEditing(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
+                      <MarkdownViewer content={content} />
+                    </>
+                  )
                 ) : (
-                  <>
-                    <div className="mb-4 flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditContent(content);
-                          setIsEditing(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </Button>
-                    </div>
-                    <MarkdownViewer content={content} />
-                  </>
-                )
-              ) : (
-                <CodeViewer content={content} filePath={selectedPath!} />
-              )}
-            </div>
+                  <CodeViewer content={content} filePath={selectedPath!} />
+                )}
+              </div>
+            ) : null
+          ) : activeTab === "database" ? (
+            <DatabaseViewer />
+          ) : activeTab === "cron" ? (
+            <CronViewer />
+          ) : activeTab === "logs" ? (
+            <LogsViewer />
+          ) : activeTab === "system" ? (
+            <SystemStats />
           ) : null}
         </main>
       </div>
