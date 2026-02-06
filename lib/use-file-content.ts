@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface FetchResult {
   content: string | null;
@@ -9,6 +9,7 @@ interface FileContentState {
   content: string | null;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 export function useFileContent(path: string | null): FileContentState {
@@ -17,6 +18,7 @@ export function useFileContent(path: string | null): FileContentState {
     error: null,
     path: null,
   });
+  const [fetchKey, setFetchKey] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -45,16 +47,20 @@ export function useFileContent(path: string | null): FileContentState {
       });
 
     return () => controller.abort();
-  }, [path]);
+  }, [path, fetchKey]);
+
+  const refetch = useCallback(() => {
+    setFetchKey((k) => k + 1);
+  }, []);
 
   if (!path) {
-    return { content: null, loading: false, error: null };
+    return { content: null, loading: false, error: null, refetch };
   }
 
   // If the result is for a different path, we're still loading
   if (result.path !== path) {
-    return { content: null, loading: true, error: null };
+    return { content: null, loading: true, error: null, refetch };
   }
 
-  return { content: result.content, loading: false, error: result.error };
+  return { content: result.content, loading: false, error: result.error, refetch };
 }

@@ -4,7 +4,7 @@ import { Suspense, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { MarkdownViewer } from "@/components/markdown-viewer";
-import { FileText, Loader2, Menu } from "lucide-react";
+import { FileText, Loader2, Menu, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -17,13 +17,16 @@ function ViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPath = searchParams.get("file");
-  const { content, loading, error } = useFileContent(selectedPath);
+  const { content, loading, error, refetch } = useFileContent(selectedPath);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
 
   const handleSelect = useCallback(
     (path: string) => {
       router.push(`?file=${encodeURIComponent(path)}`);
       setSheetOpen(false);
+      setIsEditing(false);
     },
     [router]
   );
@@ -75,6 +78,21 @@ function ViewerContent() {
             </div>
           ) : content !== null ? (
             <div className="mx-auto max-w-3xl">
+              {!isEditing && (
+                <div className="mb-4 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditContent(content);
+                      setIsEditing(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Button>
+                </div>
+              )}
               <MarkdownViewer content={content} />
             </div>
           ) : null}

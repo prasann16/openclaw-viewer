@@ -21,3 +21,11 @@
 - Added POST handler to app/api/file/route.ts accepting {path, content} JSON body
 - Validates input, returns {success: true} or appropriate error
 - Files changed: lib/files.ts, app/api/file/route.ts
+
+## edit-state
+- Added isEditing and editContent state to ViewerContent
+- Added Edit button (Pencil icon) in top-right of content area, visible when file loaded and not editing
+- Clicking Edit initializes editContent with current content and enters edit mode
+- Reset isEditing when selecting a different file
+- Added refetch capability to useFileContent hook (fetchKey pattern)
+- Files changed: app/page.tsx, lib/use-file-content.ts
