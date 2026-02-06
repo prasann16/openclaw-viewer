@@ -82,3 +82,30 @@ export async function readFileContent(
     throw new Error("NOT_FOUND");
   }
 }
+
+export async function writeFileContent(
+  filePath: string,
+  content: string
+): Promise<void> {
+  const root = getClawdRoot();
+  const resolved = path.resolve(root, filePath);
+
+  // Path traversal protection
+  if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+    throw new Error("FORBIDDEN");
+  }
+
+  // Ensure it's a .md file
+  if (!resolved.endsWith(".md")) {
+    throw new Error("FORBIDDEN");
+  }
+
+  // Ensure file exists before writing (don't create new files)
+  try {
+    await fs.access(resolved);
+  } catch {
+    throw new Error("NOT_FOUND");
+  }
+
+  await fs.writeFile(resolved, content, "utf-8");
+}

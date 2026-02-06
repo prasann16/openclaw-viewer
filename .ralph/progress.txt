@@ -15,3 +15,9 @@
 - Added ThemeToggle to sidebar header, right-aligned next to "Clawd" title
 - Used flex justify-between for positioning
 - Files changed: components/sidebar.tsx
+
+## api-file-post
+- Added writeFileContent to lib/files.ts with path traversal protection, .md check, and existence check
+- Added POST handler to app/api/file/route.ts accepting {path, content} JSON body
+- Validates input, returns {success: true} or appropriate error
+- Files changed: lib/files.ts, app/api/file/route.ts
