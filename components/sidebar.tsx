@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { FileTree, type FileNode } from "@/components/file-tree";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
   const [tree, setTree] = useState<FileNode[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,7 +22,8 @@ export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
         return res.json();
       })
       .then((data) => setTree(data.tree))
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -30,7 +33,11 @@ export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
       </div>
       <ScrollArea className="flex-1">
         <div className="p-2">
-          {error ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
             <p className="px-2 text-sm text-destructive">{error}</p>
           ) : tree.length === 0 ? (
             <p className="px-2 text-sm text-muted-foreground">No files found</p>

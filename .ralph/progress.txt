@@ -65,3 +65,14 @@
 - Error state displayed when file fetch fails
 - Wrapped in Suspense for useSearchParams compatibility
 - Files changed: app/page.tsx (rewritten)
+
+## Task: polish
+- Added loading spinner (Loader2) to sidebar while file tree loads
+- Added loading spinner to main content area while file content loads
+- Created lib/use-file-content.ts custom hook with derived loading state (avoids React Compiler lint issue)
+- Mobile responsive: sidebar hidden on small screens, accessible via Sheet (slide-over) with hamburger Menu button
+- Mobile header shows current file path or "Clawd" title
+- Sheet auto-closes when file is selected
+- Error handling in sidebar and content area with user-friendly messages
+- All validation passes: build, ESLint, TypeScript, dev server startup
+- Files changed: app/page.tsx (modified), components/sidebar.tsx (modified), lib/use-file-content.ts (new)
