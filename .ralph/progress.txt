@@ -17,3 +17,9 @@
 - Calls getFileTree() and returns JSON { tree: [...] }
 - Includes error handling with 500 response
 - Files changed: app/api/files/route.ts (new)
+
+## Task: api-file
+- Created app/api/file/route.ts with GET handler
+- Reads 'path' from searchParams, delegates to readFileContent()
+- Returns 400 for missing path, 403 for traversal attempts, 404 for not found, 500 for other errors
+- Files changed: app/api/file/route.ts (new)
