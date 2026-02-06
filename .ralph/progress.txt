@@ -1,0 +1,6 @@
+## Task: init
+- Initialized Next.js 16 project with TypeScript, Tailwind CSS v4, App Router
+- Initialized shadcn/ui with default settings
+- Added shadcn components: button, scroll-area, collapsible, sheet
+- Verified build passes successfully
+- Files created: standard Next.js scaffold + components/ui/{button,scroll-area,collapsible,sheet}.tsx, lib/utils.ts
