@@ -29,3 +29,10 @@
 - Reset isEditing when selecting a different file
 - Added refetch capability to useFileContent hook (fetchKey pattern)
 - Files changed: app/page.tsx, lib/use-file-content.ts
+
+## editor-ui
+- When isEditing=true, replace MarkdownViewer with full-height textarea (monospace, dark bg via bg-muted)
+- editContent initialized with file content on Edit click
+- Added Save and Cancel buttons above textarea
+- Cancel returns to view mode
+- Files changed: app/page.tsx
