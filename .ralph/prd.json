@@ -5,6 +5,6 @@
   {"id": "api-file-post", "description": "Update app/api/file/route.ts to handle POST requests. Accept JSON body {path, content}. Validate path is within CLAWD_ROOT. Use fs.writeFile to save. Return {success: true} or appropriate error.", "passes": true},
   {"id": "edit-state", "description": "Update app/page.tsx to add isEditing state and editContent state. Add an Edit button (Pencil icon) in the top-right of the main content area, visible when a file is selected and not editing.", "passes": true},
   {"id": "editor-ui", "description": "When isEditing is true, replace MarkdownViewer with a textarea (full height, monospace font, dark bg). Initialize editContent with the file content. Add Save and Cancel buttons above the textarea.", "passes": true},
-  {"id": "save-handler", "description": "Implement save: POST to /api/file with path and editContent. Show loading state on Save button. On success, exit edit mode and refetch the file content. On error, show alert or toast.", "passes": false},
+  {"id": "save-handler", "description": "Implement save: POST to /api/file with path and editContent. Show loading state on Save button. On success, exit edit mode and refetch the file content. On error, show alert or toast.", "passes": true},
   {"id": "polish", "description": "Test full flow: toggle theme persists on reload, edit a file and save works, cancel discards changes. Ensure mobile responsive for edit mode. Add sonner for toast notifications (npm i sonner) and show toast on save success/error.", "passes": false}
 ]

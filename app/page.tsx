@@ -21,6 +21,29 @@ function ViewerContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = useCallback(async () => {
+    if (!selectedPath) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: selectedPath, content: editContent }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save");
+      }
+      setIsEditing(false);
+      refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to save file");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedPath, editContent, refetch]);
 
   const handleSelect = useCallback(
     (path: string) => {
@@ -85,10 +108,14 @@ function ViewerContent() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsEditing(false)}
+                      disabled={isSaving}
                     >
                       Cancel
                     </Button>
-                    <Button size="sm">Save</Button>
+                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                      {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {isSaving ? "Saving..." : "Save"}
+                    </Button>
                   </div>
                   <textarea
                     className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"

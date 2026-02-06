@@ -36,3 +36,11 @@
 - Added Save and Cancel buttons above textarea
 - Cancel returns to view mode
 - Files changed: app/page.tsx
+
+## save-handler
+- Implemented handleSave: POST to /api/file with path and editContent
+- Shows loading spinner and "Saving..." text on Save button while saving
+- Disables Cancel button while saving
+- On success: exits edit mode and refetches file content
+- On error: shows alert with error message
+- Files changed: app/page.tsx
