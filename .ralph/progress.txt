@@ -23,3 +23,11 @@
 - Reads 'path' from searchParams, delegates to readFileContent()
 - Returns 400 for missing path, 403 for traversal attempts, 404 for not found, 500 for other errors
 - Files changed: app/api/file/route.ts (new)
+
+## Task: layout
+- Updated app/layout.tsx with class="dark" on html element
+- Switched to Inter font for body and JetBrains Mono for code
+- Updated metadata to "Clawd Viewer"
+- Dark mode background uses shadcn CSS variables (bg-background in dark mode)
+- Flex layout shell will be in page.tsx (sidebar + main content)
+- Files changed: app/layout.tsx (modified)
