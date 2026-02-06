@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { FileTree, type FileNode } from "@/components/file-tree";
+import { NavTabs, type TabId } from "@/components/nav-tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface SidebarProps {
   selectedPath: string | null;
   onSelect: (path: string) => void;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
 }
 
-export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
+export function Sidebar({ selectedPath, onSelect, activeTab, onTabChange }: SidebarProps) {
   const [tree, setTree] = useState<FileNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,25 +36,28 @@ export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
         <h1 className="text-lg font-semibold tracking-tight">Clawd</h1>
         <ThemeToggle />
       </div>
-      <ScrollArea className="flex-1">
-        <div className="p-2">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : error ? (
-            <p className="px-2 text-sm text-destructive">{error}</p>
-          ) : tree.length === 0 ? (
-            <p className="px-2 text-sm text-muted-foreground">No files found</p>
-          ) : (
-            <FileTree
-              tree={tree}
-              selectedPath={selectedPath}
-              onSelect={onSelect}
-            />
-          )}
-        </div>
-      </ScrollArea>
+      <NavTabs activeTab={activeTab} onTabChange={onTabChange} />
+      {activeTab === "files" && (
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <p className="px-2 text-sm text-destructive">{error}</p>
+            ) : tree.length === 0 ? (
+              <p className="px-2 text-sm text-muted-foreground">No files found</p>
+            ) : (
+              <FileTree
+                tree={tree}
+                selectedPath={selectedPath}
+                onSelect={onSelect}
+              />
+            )}
+          </div>
+        </ScrollArea>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import type { TabId } from "@/components/nav-tabs";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { FileText, Loader2, Menu, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ function ViewerContent() {
   const router = useRouter();
   const selectedPath = searchParams.get("file");
   const { content, loading, error, refetch } = useFileContent(selectedPath);
+  const [activeTab, setActiveTab] = useState<TabId>("files");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
@@ -60,14 +62,14 @@ function ViewerContent() {
     <div className="flex h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-border md:block">
-        <Sidebar selectedPath={selectedPath} onSelect={handleSelect} />
+        <Sidebar selectedPath={selectedPath} onSelect={handleSelect} activeTab={activeTab} onTabChange={setActiveTab} />
       </aside>
 
       {/* Mobile sidebar (Sheet) */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="sr-only">File browser</SheetTitle>
-          <Sidebar selectedPath={selectedPath} onSelect={handleSelect} />
+          <Sidebar selectedPath={selectedPath} onSelect={handleSelect} activeTab={activeTab} onTabChange={setActiveTab} />
         </SheetContent>
       </Sheet>
 
