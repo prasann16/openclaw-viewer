@@ -57,3 +57,12 @@
 - Loading, error, and empty states matching database-viewer patterns
 - Uses lucide-react icons: ToggleLeft/ToggleRight for enable/disable, Play for run, Loader2 for loading
 - Files changed: components/cron-viewer.tsx (new)
+
+## logs-api (completed)
+- Created app/api/logs/route.ts as Server-Sent Events endpoint
+- Uses child_process.spawn to run `tail -n 100 -f ~/.clawdbot/logs/gateway.log`
+- Streams stdout lines as SSE `data:` events, stderr as `event: error` events
+- Sends initial `: connected` SSE comment on connection
+- Handles client disconnect via ReadableStream cancel() to kill tail process
+- Uses `force-dynamic` export to prevent static optimization
+- Files changed: app/api/logs/route.ts (new)
