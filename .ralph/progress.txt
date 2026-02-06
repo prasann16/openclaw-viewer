@@ -40,3 +40,11 @@
 - Pagination controls (prev/next) with "Showing X–Y of Z" display
 - Loading and error states for both table list and row fetching
 - Files changed: components/database-viewer.tsx (new)
+
+## cron-api (completed)
+- Created app/api/cron/route.ts - GET runs `clawdbot cron list --json`, returns {jobs: [...]}
+- Created app/api/cron/[id]/toggle/route.ts - POST accepts {enabled: bool}, runs `clawdbot cron enable/disable <id>`
+- Created app/api/cron/[id]/run/route.ts - POST runs `clawdbot cron run <id> --force`
+- All endpoints validate job ID as UUID format to prevent command injection
+- Uses child_process.exec with promisify, follows existing API patterns (NextResponse.json, try/catch)
+- Files changed: app/api/cron/route.ts (new), app/api/cron/[id]/toggle/route.ts (new), app/api/cron/[id]/run/route.ts (new)
