@@ -32,7 +32,7 @@ export async function getFileTree(
         path.join(dir, entry.name),
         relativePath
       );
-      // Only include folders that contain .md files (directly or nested)
+      // Only include folders that contain files (directly or nested)
       if (children.length > 0) {
         nodes.push({
           name: entry.name,
@@ -41,7 +41,7 @@ export async function getFileTree(
           children,
         });
       }
-    } else if (entry.name.endsWith(".md")) {
+    } else {
       nodes.push({
         name: entry.name,
         path: relativePath,
@@ -67,11 +67,6 @@ export async function readFileContent(
 
   // Path traversal protection
   if (!resolved.startsWith(root + path.sep) && resolved !== root) {
-    throw new Error("FORBIDDEN");
-  }
-
-  // Ensure it's a .md file
-  if (!resolved.endsWith(".md")) {
     throw new Error("FORBIDDEN");
   }
 

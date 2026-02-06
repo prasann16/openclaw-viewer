@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import type { TabId } from "@/components/nav-tabs";
 import { MarkdownViewer } from "@/components/markdown-viewer";
+import { CodeViewer } from "@/components/code-viewer";
 import { FileText, Loader2, Menu, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,45 +106,49 @@ function ViewerContent() {
             </div>
           ) : content !== null ? (
             <div className="mx-auto max-w-3xl">
-              {isEditing ? (
-                <div className="flex h-full flex-col gap-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditing(false)}
-                      disabled={isSaving}
-                    >
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                      {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {isSaving ? "Saving..." : "Save"}
-                    </Button>
+              {selectedPath?.endsWith(".md") ? (
+                isEditing ? (
+                  <div className="flex h-full flex-col gap-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditing(false)}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                        {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                    <textarea
+                      className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                    />
                   </div>
-                  <textarea
-                    className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                </div>
+                ) : (
+                  <>
+                    <div className="mb-4 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditContent(content);
+                          setIsEditing(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    </div>
+                    <MarkdownViewer content={content} />
+                  </>
+                )
               ) : (
-                <>
-                  <div className="mb-4 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditContent(content);
-                        setIsEditing(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </div>
-                  <MarkdownViewer content={content} />
-                </>
+                <CodeViewer content={content} filePath={selectedPath!} />
               )}
             </div>
           ) : null}

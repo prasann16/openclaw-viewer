@@ -5,3 +5,12 @@
 - Updated sidebar.tsx to include NavTabs above file tree, file tree only shows when "files" tab is active
 - Added activeTab state to page.tsx, passed to both desktop and mobile Sidebar instances
 - Files changed: components/nav-tabs.tsx (new), components/sidebar.tsx, app/page.tsx
+
+## all-file-types (completed)
+- Removed .md filter from getFileTree in lib/files.ts to show all files in the tree
+- Removed .md restriction from readFileContent to allow reading any file
+- Created components/code-viewer.tsx using highlight.js with language detection from file extension
+- Supports: .json, .ts, .tsx, .js, .jsx, .py, .sh, .yaml, .yml, .toml, .env, .txt, .css, .html
+- Updated page.tsx to render CodeViewer for non-.md files, MarkdownViewer for .md files
+- Edit functionality remains restricted to .md files only
+- Files changed: lib/files.ts, components/code-viewer.tsx (new), app/page.tsx
