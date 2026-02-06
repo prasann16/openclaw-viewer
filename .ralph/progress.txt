@@ -14,3 +14,12 @@
 - Updated page.tsx to render CodeViewer for non-.md files, MarkdownViewer for .md files
 - Edit functionality remains restricted to .md files only
 - Files changed: lib/files.ts, components/code-viewer.tsx (new), app/page.tsx
+
+## sqlite-setup (completed)
+- Installed better-sqlite3 and @types/better-sqlite3
+- Created lib/database.ts with functions: getTables(), getTableSchema(table), getTableRows(table, limit, offset)
+- Opens DB in readonly mode for safety
+- Validates table names against whitelist to prevent SQL injection
+- Clamps limit/offset for safe pagination
+- Filters out sqlite_sequence internal table from getTables results
+- Files changed: lib/database.ts (new), package.json, package-lock.json
