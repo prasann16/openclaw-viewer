@@ -1,6 +1,6 @@
 [
   {"id": "next-themes", "description": "Install next-themes (npm i next-themes). Update app/layout.tsx to wrap the app with ThemeProvider from next-themes. Set attribute='class', defaultTheme='dark', enableSystem=false.", "passes": true},
-  {"id": "theme-toggle", "description": "Create components/theme-toggle.tsx - a button that toggles between dark/light using useTheme from next-themes. Show Sun icon in dark mode, Moon icon in light mode. Use lucide-react icons.", "passes": false},
+  {"id": "theme-toggle", "description": "Create components/theme-toggle.tsx - a button that toggles between dark/light using useTheme from next-themes. Show Sun icon in dark mode, Moon icon in light mode. Use lucide-react icons.", "passes": true},
   {"id": "add-toggle-to-sidebar", "description": "Add the ThemeToggle component to the sidebar header, positioned on the right side of the header row next to the 'Clawd' title.", "passes": false},
   {"id": "api-file-post", "description": "Update app/api/file/route.ts to handle POST requests. Accept JSON body {path, content}. Validate path is within CLAWD_ROOT. Use fs.writeFile to save. Return {success: true} or appropriate error.", "passes": false},
   {"id": "edit-state", "description": "Update app/page.tsx to add isEditing state and editContent state. Add an Edit button (Pencil icon) in the top-right of the main content area, visible when a file is selected and not editing.", "passes": false},

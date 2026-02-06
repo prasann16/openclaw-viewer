@@ -4,3 +4,9 @@
 - Added suppressHydrationWarning to html element to prevent flash
 - Removed hardcoded className="dark" from html element (now managed by next-themes)
 - Files changed: app/layout.tsx, package.json
+
+## theme-toggle
+- Created components/theme-toggle.tsx
+- Uses useTheme from next-themes, Sun/Moon icons from lucide-react
+- Uses CSS classes (hidden/block dark:hidden/dark:block) for icon switching to avoid hydration mismatch
+- Files changed: components/theme-toggle.tsx
