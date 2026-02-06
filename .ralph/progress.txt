@@ -11,3 +11,9 @@
 - getFileTree() recursively walks directories, filters to .md files, skips hidden dirs, sorts folders first
 - readFileContent() validates path is within CLAWD_ROOT (traversal protection) and reads file content
 - Files changed: .env.local (new), lib/files.ts (new)
+
+## Task: api-files
+- Created app/api/files/route.ts with GET handler
+- Calls getFileTree() and returns JSON { tree: [...] }
+- Includes error handling with 500 response
+- Files changed: app/api/files/route.ts (new)
