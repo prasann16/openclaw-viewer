@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { FileTree, type FileNode } from "@/components/file-tree";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface SidebarProps {
   selectedPath: string | null;
@@ -28,8 +29,9 @@ export function Sidebar({ selectedPath, onSelect }: SidebarProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h1 className="text-lg font-semibold tracking-tight">Clawd</h1>
+        <ThemeToggle />
       </div>
       <ScrollArea className="flex-1">
         <div className="p-2">

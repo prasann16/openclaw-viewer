@@ -10,3 +10,8 @@
 - Uses useTheme from next-themes, Sun/Moon icons from lucide-react
 - Uses CSS classes (hidden/block dark:hidden/dark:block) for icon switching to avoid hydration mismatch
 - Files changed: components/theme-toggle.tsx
+
+## add-toggle-to-sidebar
+- Added ThemeToggle to sidebar header, right-aligned next to "Clawd" title
+- Used flex justify-between for positioning
+- Files changed: components/sidebar.tsx
