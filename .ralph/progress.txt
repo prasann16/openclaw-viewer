@@ -31,3 +31,12 @@
 - Dark mode background uses shadcn CSS variables (bg-background in dark mode)
 - Flex layout shell will be in page.tsx (sidebar + main content)
 - Files changed: app/layout.tsx (modified)
+
+## Task: file-tree
+- Created components/file-tree.tsx with recursive FileTree and FileTreeNode components
+- Uses Collapsible for folders with chevron rotation animation
+- Uses lucide-react icons (ChevronRight, File, Folder)
+- Highlights selected file with bg-accent
+- Depth-based indentation for nested items
+- Sorting handled by getFileTree() in lib/files.ts (folders first, alpha)
+- Files changed: components/file-tree.tsx (new)
