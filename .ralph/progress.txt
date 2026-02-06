@@ -44,3 +44,11 @@
 - On success: exits edit mode and refetches file content
 - On error: shows alert with error message
 - Files changed: app/page.tsx
+
+## polish
+- Installed sonner for toast notifications
+- Added Toaster component to layout (inside ThemeProvider, richColors enabled)
+- Replaced alert() with toast.success/toast.error in save handler
+- Edit mode already mobile responsive (full-width textarea, responsive padding)
+- All validation passes: tsc, lint, build
+- Files changed: app/layout.tsx, app/page.tsx, package.json

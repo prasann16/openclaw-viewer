@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useFileContent } from "@/lib/use-file-content";
+import { toast } from "sonner";
 
 function ViewerContent() {
   const searchParams = useSearchParams();
@@ -38,8 +39,9 @@ function ViewerContent() {
       }
       setIsEditing(false);
       refetch();
+      toast.success("File saved successfully");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to save file");
+      toast.error(err instanceof Error ? err.message : "Failed to save file");
     } finally {
       setIsSaving(false);
     }

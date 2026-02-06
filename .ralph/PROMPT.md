@@ -62,90 +62,39 @@ Do not output COMPLETE until PR is created.
 
 # Feature Spec
 
-# Clawd Viewer — Personal Memory Interface
+# Clawd Viewer v2 — Dark/Light Toggle + Edit Mode
 
-A simple Next.js web app to browse and view Clawdbot's memory files.
+Add two features to the existing clawd-viewer app.
 
-## Stack
-- Next.js 14+ (App Router)
-- Tailwind CSS
-- shadcn/ui components
-- Runs on VPS, accesses ~/clawd directly via filesystem
+## Feature 1: Dark/Light Mode Toggle
 
-## Features (MVP)
+- Add a theme toggle button in the sidebar header (sun/moon icon)
+- Use next-themes for theme management
+- Store preference in localStorage
+- Default to dark mode
+- Toggle should be smooth (no flash on page load)
 
-### 1. File Browser (sidebar)
-- Tree view of ~/clawd/ directory
-- Shows .md files and folders
-- Click to select file
-- Highlight current file
-- Collapsible folders
+## Feature 2: File Editing
 
-### 2. Markdown Viewer (main area)
-- Render selected markdown file
-- Nice typography (prose styles)
-- Code syntax highlighting (use highlight.js or shiki)
-- Support for tables, lists, code blocks, GFM
+- Add an "Edit" button when viewing a file
+- Clicking Edit switches the markdown viewer to a textarea editor
+- Editor should be a nice code editor feel (monospace font, proper sizing)
+- Add "Save" and "Cancel" buttons when in edit mode
+- Save calls POST /api/file to write the file
+- Show loading state while saving
+- Show success/error toast after save
+- Return to view mode after successful save
 
-### 3. Basic Layout
-- Sidebar (250px, file tree) + Main (content viewer)
-- Dark mode by default
-- Clean, minimal design
-- Mobile: sidebar as drawer/sheet
+## API Changes
 
-## File Structure
-```
-clawd-viewer/
-├── app/
-│   ├── page.tsx              # Main viewer page
-│   ├── layout.tsx            # Root layout with sidebar
-│   └── api/
-│       ├── files/route.ts    # GET: List directory tree
-│       └── file/route.ts     # GET: Read file content by path
-├── components/
-│   ├── file-tree.tsx         # Recursive tree component
-│   ├── markdown-viewer.tsx   # Markdown renderer
-│   └── sidebar.tsx           # Sidebar wrapper
-├── lib/
-│   └── files.ts              # File system utilities
-├── tailwind.config.ts
-├── package.json
-└── .env.local
-```
+### POST /api/file
+- Body: { path: string, content: string }
+- Validates path is within CLAWD_ROOT
+- Writes content to file
+- Returns { success: true } or error
 
-## Environment Variables
-- `CLAWD_ROOT` — path to clawd workspace (default: `/home/clawdbot/clawd`)
-
-## API Routes
-
-### GET /api/files
-Returns recursive tree of all .md files in CLAWD_ROOT.
-```json
-{
-  "tree": [
-    { "name": "MEMORY.md", "path": "MEMORY.md", "type": "file" },
-    { "name": "memory", "path": "memory", "type": "folder", "children": [...] }
-  ]
-}
-```
-
-### GET /api/file?path=memory/2026-01-26.md
-Returns file content. Validates path is within CLAWD_ROOT (prevent traversal).
-```json
-{
-  "content": "# Daily Log...",
-  "path": "memory/2026-01-26.md"
-}
-```
-
-## Constraints
-- Read-only (no editing in v1)
-- No authentication (Tailscale handles network security)
-- No database
-- Single user (personal tool)
-
-## Design Notes
-- Dark theme: zinc/slate background, clean white text
-- Monospace for code, nice serif or sans for prose
-- File tree: subtle hover states, folder icons, file icons
-- Keep it simple and fast
+## UI Notes
+- Keep it minimal — just add what's needed
+- Theme toggle: small icon button, top right of sidebar header
+- Edit button: top right of the content area, only shows when file is selected
+- Use existing shadcn components (Button, Textarea if available)
