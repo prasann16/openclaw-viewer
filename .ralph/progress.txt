@@ -78,3 +78,13 @@
 - Connection status indicator (green/gray dot)
 - Loading and empty states matching other viewer components
 - Files changed: components/logs-viewer.tsx (new)
+
+## system-api (completed)
+- Created app/api/system/route.ts - GET returns {cpu, ram: {used, total, percent}, disk: {used, total, percent}, uptime}
+- CPU: reads /proc/stat twice (0.5s apart) to calculate real CPU usage percentage
+- RAM: uses Node os.totalmem()/os.freemem() for memory stats
+- Disk: runs `df -B1 /` to get disk usage in bytes, converts to GB
+- Uptime: uses os.uptime() for system uptime in seconds
+- All values rounded to 1 decimal place, graceful fallback to 0 on errors
+- Follows existing API patterns (NextResponse.json, try/catch, Promise.all for concurrent ops)
+- Files changed: app/api/system/route.ts (new)
