@@ -47,3 +47,11 @@
 - Created components/markdown-viewer.tsx using ReactMarkdown with remark-gfm and rehype-highlight
 - Uses prose-invert for dark mode, github-dark highlight.js theme
 - Files changed: components/markdown-viewer.tsx (new), app/globals.css (modified), package.json (modified)
+
+## Task: sidebar
+- Created components/sidebar.tsx wrapper component
+- Fetches /api/files on mount, stores tree in state
+- Renders "Clawd" header with border, FileTree in ScrollArea
+- Handles error and empty states
+- Accepts selectedPath and onSelect props from parent
+- Files changed: components/sidebar.tsx (new)
