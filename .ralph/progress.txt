@@ -48,3 +48,12 @@
 - All endpoints validate job ID as UUID format to prevent command injection
 - Uses child_process.exec with promisify, follows existing API patterns (NextResponse.json, try/catch)
 - Files changed: app/api/cron/route.ts (new), app/api/cron/[id]/toggle/route.ts (new), app/api/cron/[id]/run/route.ts (new)
+
+## cron-ui (completed)
+- Created components/cron-viewer.tsx with full cron jobs UI
+- Fetches jobs from /api/cron on mount with 30s auto-refresh interval
+- Table with columns: name, schedule, last run (relative time), status (colored badge), enabled (toggle icon), actions (Run Now button)
+- Toggle and Run Now actions with per-job loading states (using Set<string> for tracking)
+- Loading, error, and empty states matching database-viewer patterns
+- Uses lucide-react icons: ToggleLeft/ToggleRight for enable/disable, Play for run, Loader2 for loading
+- Files changed: components/cron-viewer.tsx (new)
