@@ -31,3 +31,12 @@
 - Pagination params parsed from query string with defaults (limit=50, offset=0)
 - Follows existing API route patterns (NextResponse.json, try/catch error handling)
 - Files changed: app/api/database/route.ts (new), app/api/database/[table]/route.ts (new)
+
+## database-ui (completed)
+- Created components/database-viewer.tsx with full SQLite browser UI
+- Fetches table list from /api/database on mount, auto-selects first table
+- Table tabs for switching between tables with row count badges
+- Data table with column headers, truncated cell values, null styling
+- Pagination controls (prev/next) with "Showing X–Y of Z" display
+- Loading and error states for both table list and row fetching
+- Files changed: components/database-viewer.tsx (new)
