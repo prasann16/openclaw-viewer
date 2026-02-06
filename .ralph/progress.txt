@@ -66,3 +66,15 @@
 - Handles client disconnect via ReadableStream cancel() to kill tail process
 - Uses `force-dynamic` export to prevent static optimization
 - Files changed: app/api/logs/route.ts (new)
+
+## logs-ui (completed)
+- Created components/logs-viewer.tsx with real-time log streaming UI
+- Connects to /api/logs using EventSource for SSE streaming
+- Terminal-style display: dark bg (zinc-950), green text, monospace font
+- Auto-scroll to bottom, disables when user scrolls up manually
+- Pause/Resume button disconnects/reconnects EventSource
+- Clear button to reset log lines
+- Keeps last 100 lines max, trimming older entries
+- Connection status indicator (green/gray dot)
+- Loading and empty states matching other viewer components
+- Files changed: components/logs-viewer.tsx (new)
