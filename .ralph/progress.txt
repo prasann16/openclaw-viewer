@@ -4,3 +4,10 @@
 - Added shadcn components: button, scroll-area, collapsible, sheet
 - Verified build passes successfully
 - Files created: standard Next.js scaffold + components/ui/{button,scroll-area,collapsible,sheet}.tsx, lib/utils.ts
+
+## Task: env-setup
+- Created .env.local with CLAWD_ROOT=/home/clawdbot/clawd
+- Created lib/files.ts with getFileTree() and readFileContent() helpers
+- getFileTree() recursively walks directories, filters to .md files, skips hidden dirs, sorts folders first
+- readFileContent() validates path is within CLAWD_ROOT (traversal protection) and reads file content
+- Files changed: .env.local (new), lib/files.ts (new)
