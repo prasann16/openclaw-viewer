@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# clawd-viewer
 
-## Getting Started
+A lightweight web dashboard for monitoring Clawdbot instances. View logs, manage cron jobs, browse files, query databases, and monitor system stats — all from your browser.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+## Features
+
+- **📊 System Stats** — CPU, RAM, disk usage, uptime
+- **📜 Live Logs** — Real-time log streaming with SSE
+- **⏰ Cron Jobs** — View, toggle, and manually run scheduled tasks
+- **📁 File Browser** — Navigate and view workspace files
+- **🗄️ Database Viewer** — Browse SQLite tables and query data
+- **🔄 Process Monitor** — View running processes with kill capability
+- **🌙 Dark Mode** — Easy on the eyes
+
+## Quick Start
 
 ```bash
+# Clone
+git clone https://github.com/prasann16/clawd-viewer.git
+cd clawd-viewer
+
+# Install
+npm install
+
+# Run
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The viewer expects to run alongside a Clawdbot instance. It reads from:
 
-## Learn More
+- `~/.clawdbot/` — Config and state
+- `~/clawd/` — Workspace files
+- SQLite databases in the workspace
 
-To learn more about Next.js, take a look at the following resources:
+## API Endpoints
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/system` | System stats (CPU, RAM, disk, uptime) |
+| `GET /api/logs` | SSE stream of gateway logs |
+| `GET /api/activity` | Recent activity/events |
+| `GET /api/cron` | List cron jobs |
+| `POST /api/cron/[id]/toggle` | Enable/disable a cron job |
+| `POST /api/cron/[id]/run` | Manually trigger a cron job |
+| `GET /api/files` | List workspace files |
+| `GET /api/file?path=...` | Read file contents |
+| `GET /api/database` | List SQLite tables |
+| `GET /api/database/[table]` | Query table rows |
+| `GET /api/processes` | List running processes |
+| `POST /api/process/kill` | Kill a process |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+- **Framework:** Next.js 15 (App Router)
+- **UI:** Tailwind CSS + shadcn/ui
+- **State:** React hooks
+- **Streaming:** Server-Sent Events (SSE)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
