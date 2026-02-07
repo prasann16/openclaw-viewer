@@ -9,7 +9,7 @@ A lightweight web dashboard for monitoring [Clawdbot](https://github.com/clawdbo
 
 **Clawdbot** is an AI assistant framework that runs as a background daemon, connecting to messaging platforms (Telegram, Discord, WhatsApp, etc.) and executing tasks autonomously. It has memory, cron jobs, file access, and tool integrations.
 
-**clawd-viewer** is a companion web UI that lets you see what your Clawdbot is doing:
+**openclaw-viewer** is a companion web UI that lets you see what your Clawdbot is doing:
 
 - Watch logs stream in real-time
 - See scheduled tasks and trigger them manually
@@ -33,17 +33,95 @@ Think of it as a control panel for your AI assistant.
 
 ```bash
 # Clone
-git clone https://github.com/prasann16/clawd-viewer.git
-cd clawd-viewer
+git clone https://github.com/prasann16/openclaw-viewer.git
+cd openclaw-viewer
 
 # Install
 npm install
 
-# Run
+# Run (development)
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+## Production Deployment
+
+### Manual Deploy
+
+```bash
+# Clone on your server
+git clone https://github.com/prasann16/openclaw-viewer.git
+cd openclaw-viewer
+
+# Install and build
+npm install
+npm run build
+
+# Run in production (port 3000)
+npm start
+
+# Or use PM2 for process management
+npm install -g pm2
+pm2 start npm --name "openclaw-viewer" -- start
+pm2 save
+```
+
+### Auto-Deploy on Push
+
+Set up GitHub Actions to automatically deploy when you push to main.
+
+**1. Add SSH key to your server:**
+```bash
+# On your LOCAL machine, generate a deploy key
+ssh-keygen -t ed25519 -f ~/.ssh/openclaw-deploy -N ""
+
+# Copy public key to server
+ssh-copy-id -i ~/.ssh/openclaw-deploy.pub user@yourserver
+```
+
+**2. Add secrets to GitHub repo:**
+
+Go to repo → Settings → Secrets → Actions, add:
+- `DEPLOY_HOST` — your server IP or hostname
+- `DEPLOY_USER` — SSH username (e.g., `clawdbot`)
+- `DEPLOY_KEY` — contents of `~/.ssh/openclaw-deploy` (private key)
+- `DEPLOY_PATH` — where viewer lives (e.g., `/home/clawdbot/openclaw-viewer`)
+
+**3. Create workflow file:**
+
+The repo includes `.github/workflows/deploy.yml` which:
+- Triggers on push to main
+- SSHs into your server
+- Pulls latest code
+- Runs `npm install && npm run build`
+- Restarts the app via PM2
+
+### Using systemd (Alternative to PM2)
+
+```bash
+# /etc/systemd/system/openclaw-viewer.service
+[Unit]
+Description=OpenClaw Viewer
+After=network.target
+
+[Service]
+Type=simple
+User=clawdbot
+WorkingDirectory=/home/clawdbot/openclaw-viewer
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable openclaw-viewer
+sudo systemctl start openclaw-viewer
+```
 
 ## Configuration
 
@@ -55,7 +133,10 @@ The viewer expects to run on the same machine as Clawdbot. It reads from:
 | `~/clawd/` | Workspace (memory, files, databases) |
 | `~/.clawdbot/gateway.log` | Live log file |
 
-If your Clawdbot uses different paths, update the constants in `lib/files.ts` and `lib/database.ts`.
+Override with environment variables:
+```bash
+CLAWD_ROOT=/custom/path npm start
+```
 
 ## Use Cases
 
@@ -106,8 +187,8 @@ sudo tailscale up
 # Note your Tailscale IP (e.g., 100.x.x.x)
 tailscale ip -4
 
-# Run clawd-viewer
-npm run dev
+# Run openclaw-viewer
+npm start
 ```
 
 **2. Set up on your local device:**
