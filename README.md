@@ -89,13 +89,54 @@ If your Clawdbot uses different paths, update the constants in `lib/files.ts` an
 - **State:** React hooks
 - **Streaming:** Server-Sent Events (SSE)
 
-## Security Note
+## Remote Access
 
-This dashboard has **no authentication** built-in. It's designed to run locally or behind a secure proxy. If exposing to the internet:
+This dashboard has **no authentication** built-in. Here are secure ways to access it remotely:
 
-- Use a reverse proxy with basic auth (nginx, Caddy)
-- Or SSH tunnel (`ssh -L 3000:localhost:3000 yourserver`)
-- Or add your own auth layer
+### Tailscale (Recommended)
+
+[Tailscale](https://tailscale.com) creates a private network between your devices. Free for personal use.
+
+```bash
+# On your server
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+
+# Note your Tailscale IP (e.g., 100.x.x.x)
+tailscale ip -4
+
+# Run clawd-viewer
+npm run dev
+```
+
+Then access from any device on your Tailnet: `http://100.x.x.x:3000`
+
+**Bonus:** Add [Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve) for HTTPS:
+```bash
+tailscale serve --bg 3000
+# Now accessible at https://your-server.tail-scale.ts.net
+```
+
+### SSH Tunnel
+
+```bash
+ssh -L 3000:localhost:3000 user@yourserver
+# Then open http://localhost:3000 on your machine
+```
+
+### Reverse Proxy with Auth
+
+Use nginx or Caddy with basic auth:
+
+```
+# Caddyfile example
+viewer.yourdomain.com {
+    basicauth {
+        admin $2a$14$... # use: caddy hash-password
+    }
+    reverse_proxy localhost:3000
+}
+```
 
 ## License
 
