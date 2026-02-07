@@ -39,89 +39,11 @@ cd openclaw-viewer
 # Install
 npm install
 
-# Run (development)
+# Run (with hot reload)
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
-
-## Production Deployment
-
-### Manual Deploy
-
-```bash
-# Clone on your server
-git clone https://github.com/prasann16/openclaw-viewer.git
-cd openclaw-viewer
-
-# Install and build
-npm install
-npm run build
-
-# Run in production (port 3000)
-npm start
-
-# Or use PM2 for process management
-npm install -g pm2
-pm2 start npm --name "openclaw-viewer" -- start
-pm2 save
-```
-
-### Auto-Deploy on Push
-
-Set up GitHub Actions to automatically deploy when you push to main.
-
-**1. Add SSH key to your server:**
-```bash
-# On your LOCAL machine, generate a deploy key
-ssh-keygen -t ed25519 -f ~/.ssh/openclaw-deploy -N ""
-
-# Copy public key to server
-ssh-copy-id -i ~/.ssh/openclaw-deploy.pub user@yourserver
-```
-
-**2. Add secrets to GitHub repo:**
-
-Go to repo → Settings → Secrets → Actions, add:
-- `DEPLOY_HOST` — your server IP or hostname
-- `DEPLOY_USER` — SSH username (e.g., `clawdbot`)
-- `DEPLOY_KEY` — contents of `~/.ssh/openclaw-deploy` (private key)
-- `DEPLOY_PATH` — where viewer lives (e.g., `/home/clawdbot/openclaw-viewer`)
-
-**3. Create workflow file:**
-
-The repo includes `.github/workflows/deploy.yml` which:
-- Triggers on push to main
-- SSHs into your server
-- Pulls latest code
-- Runs `npm install && npm run build`
-- Restarts the app via PM2
-
-### Using systemd (Alternative to PM2)
-
-```bash
-# /etc/systemd/system/openclaw-viewer.service
-[Unit]
-Description=OpenClaw Viewer
-After=network.target
-
-[Service]
-Type=simple
-User=clawdbot
-WorkingDirectory=/home/clawdbot/openclaw-viewer
-ExecStart=/usr/bin/npm start
-Restart=on-failure
-Environment=NODE_ENV=production
-Environment=PORT=3000
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl enable openclaw-viewer
-sudo systemctl start openclaw-viewer
-```
 
 ## Configuration
 
@@ -135,14 +57,14 @@ The viewer expects to run on the same machine as Clawdbot. It reads from:
 
 Override with environment variables:
 ```bash
-CLAWD_ROOT=/custom/path npm start
+CLAWD_ROOT=/custom/path npm run dev
 ```
 
 ## Use Cases
 
 **Local development** — Run alongside Clawdbot on your machine to debug and monitor.
 
-**Remote server** — Deploy on your VPS next to Clawdbot. Access via SSH tunnel or reverse proxy with auth.
+**Remote server** — Deploy on your VPS next to Clawdbot. Access via Tailscale or SSH tunnel.
 
 **Clawdbot Cloud** — This powers the monitoring dashboard in [Clawdbot Cloud](https://clawdbot.cloud), letting users see their hosted bot's activity.
 
@@ -188,7 +110,7 @@ sudo tailscale up
 tailscale ip -4
 
 # Run openclaw-viewer
-npm start
+npm run dev
 ```
 
 **2. Set up on your local device:**
@@ -221,20 +143,6 @@ tailscale serve --bg 3000
 ```bash
 ssh -L 3000:localhost:3000 user@yourserver
 # Then open http://localhost:3000 on your machine
-```
-
-### Reverse Proxy with Auth
-
-Use nginx or Caddy with basic auth:
-
-```
-# Caddyfile example
-viewer.yourdomain.com {
-    basicauth {
-        admin $2a$14$... # use: caddy hash-password
-    }
-    reverse_proxy localhost:3000
-}
 ```
 
 ## License
