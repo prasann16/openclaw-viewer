@@ -1,9 +1,23 @@
 # clawd-viewer
 
-A lightweight web dashboard for monitoring Clawdbot instances. View logs, manage cron jobs, browse files, query databases, and monitor system stats — all from your browser.
+A lightweight web dashboard for monitoring [Clawdbot](https://github.com/clawdbot/clawdbot) instances. View logs, manage cron jobs, browse files, query databases, and monitor system stats — all from your browser.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+
+## What is this?
+
+**Clawdbot** is an AI assistant framework that runs as a background daemon, connecting to messaging platforms (Telegram, Discord, WhatsApp, etc.) and executing tasks autonomously. It has memory, cron jobs, file access, and tool integrations.
+
+**clawd-viewer** is a companion web UI that lets you see what your Clawdbot is doing:
+
+- Watch logs stream in real-time
+- See scheduled tasks and trigger them manually
+- Browse the workspace files your bot reads/writes
+- Check system resources (is it eating all your RAM?)
+- View and query the SQLite databases it uses
+
+Think of it as a control panel for your AI assistant.
 
 ## Features
 
@@ -33,11 +47,23 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Configuration
 
-The viewer expects to run alongside a Clawdbot instance. It reads from:
+The viewer expects to run on the same machine as Clawdbot. It reads from:
 
-- `~/.clawdbot/` — Config and state
-- `~/clawd/` — Workspace files
-- SQLite databases in the workspace
+| Path | What |
+|------|------|
+| `~/.clawdbot/` | Clawdbot config and state |
+| `~/clawd/` | Workspace (memory, files, databases) |
+| `~/.clawdbot/gateway.log` | Live log file |
+
+If your Clawdbot uses different paths, update the constants in `lib/files.ts` and `lib/database.ts`.
+
+## Use Cases
+
+**Local development** — Run alongside Clawdbot on your machine to debug and monitor.
+
+**Remote server** — Deploy on your VPS next to Clawdbot. Access via SSH tunnel or reverse proxy with auth.
+
+**Clawdbot Cloud** — This powers the monitoring dashboard in [Clawdbot Cloud](https://clawdbot.cloud), letting users see their hosted bot's activity.
 
 ## API Endpoints
 
@@ -62,6 +88,14 @@ The viewer expects to run alongside a Clawdbot instance. It reads from:
 - **UI:** Tailwind CSS + shadcn/ui
 - **State:** React hooks
 - **Streaming:** Server-Sent Events (SSE)
+
+## Security Note
+
+This dashboard has **no authentication** built-in. It's designed to run locally or behind a secure proxy. If exposing to the internet:
+
+- Use a reverse proxy with basic auth (nginx, Caddy)
+- Or SSH tunnel (`ssh -L 3000:localhost:3000 yourserver`)
+- Or add your own auth layer
 
 ## License
 
