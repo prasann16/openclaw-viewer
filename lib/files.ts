@@ -20,6 +20,7 @@ export const WORKSPACES: Workspace[] = [
   { id: "myreader", name: "MyReader Bot", path: "/home/clawdbot/clawd-myreader" },
   { id: "creator", name: "Creator Bot", path: "/home/clawdbot/clawd-creator" },
   { id: "trader", name: "Trader Bot", path: "/home/clawdbot/trader" },
+  { id: "clawdbot", name: "⚙️ .clawdbot (internals)", path: "/home/clawdbot/.clawdbot" },
 ];
 
 const DEFAULT_WORKSPACE = process.env.CLAWD_ROOT || "/home/clawdbot/clawd";
