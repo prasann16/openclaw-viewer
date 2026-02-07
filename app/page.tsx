@@ -32,9 +32,11 @@ function ViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPath = searchParams.get("file");
+  const workspaceParam = searchParams.get("workspace") || "main";
+  const [workspace, setWorkspace] = useState(workspaceParam);
   const isImage = isImageFile(selectedPath);
   // Only fetch content for non-image files
-  const { content, loading, error, refetch } = useFileContent(isImage ? null : selectedPath);
+  const { content, loading, error, refetch } = useFileContent(isImage ? null : selectedPath, workspace);
   const [activeTab, setActiveTab] = useState<TabId>("files");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,7 +50,7 @@ function ViewerContent() {
       const res = await fetch("/api/file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: selectedPath, content: editContent }),
+        body: JSON.stringify({ path: selectedPath, content: editContent, workspace }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -62,14 +64,23 @@ function ViewerContent() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedPath, editContent, refetch]);
+  }, [selectedPath, editContent, workspace, refetch]);
 
   const handleSelect = useCallback(
     (path: string) => {
       // Use replace with scroll: false for smoother navigation
-      router.replace(`?file=${encodeURIComponent(path)}`, { scroll: false });
+      router.replace(`?workspace=${workspace}&file=${encodeURIComponent(path)}`, { scroll: false });
       setSheetOpen(false);
       setIsEditing(false);
+    },
+    [router, workspace]
+  );
+
+  const handleWorkspaceChange = useCallback(
+    (newWorkspace: string) => {
+      setWorkspace(newWorkspace);
+      // Clear selected file when changing workspace
+      router.replace(`?workspace=${newWorkspace}`, { scroll: false });
     },
     [router]
   );
@@ -86,7 +97,7 @@ function ViewerContent() {
 
     // Handle images separately (no content loading needed)
     if (isImage) {
-      return <ImageViewer path={selectedPath} />;
+      return <ImageViewer path={selectedPath} workspace={workspace} />;
     }
 
     if (loading) {
@@ -170,14 +181,28 @@ function ViewerContent() {
     <div className="flex h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-border md:block">
-        <Sidebar selectedPath={selectedPath} onSelect={handleSelect} activeTab={activeTab} onTabChange={setActiveTab} />
+        <Sidebar 
+          selectedPath={selectedPath} 
+          onSelect={handleSelect} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          workspace={workspace}
+          onWorkspaceChange={handleWorkspaceChange}
+        />
       </aside>
 
       {/* Mobile sidebar (Sheet) */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="sr-only">File browser</SheetTitle>
-          <Sidebar selectedPath={selectedPath} onSelect={handleSelect} activeTab={activeTab} onTabChange={setActiveTab} />
+          <Sidebar 
+            selectedPath={selectedPath} 
+            onSelect={handleSelect} 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab}
+            workspace={workspace}
+            onWorkspaceChange={handleWorkspaceChange}
+          />
         </SheetContent>
       </Sheet>
 
@@ -193,7 +218,7 @@ function ViewerContent() {
             <span className="sr-only">Open menu</span>
           </Button>
           <span className="ml-2 text-sm font-medium">
-            {selectedPath || "Clawd"}
+            {selectedPath || "OpenClaw"}
           </span>
         </div>
 

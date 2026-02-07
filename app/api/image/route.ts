@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
-import { join } from "path";
+import { join, resolve } from "path";
 import { existsSync } from "fs";
-
-const CLAWD_ROOT = process.env.CLAWD_ROOT || join(process.env.HOME || "", "clawd");
+import { getWorkspaceRoot } from "@/lib/files";
 
 const MIME_TYPES: Record<string, string> = {
   ".png": "image/png",
@@ -17,14 +16,17 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(request: NextRequest) {
   const filePath = request.nextUrl.searchParams.get("path");
+  const workspace = request.nextUrl.searchParams.get("workspace") || undefined;
 
   if (!filePath) {
     return NextResponse.json({ error: "Missing 'path' parameter" }, { status: 400 });
   }
 
+  const root = getWorkspaceRoot(workspace);
+
   // Security: prevent path traversal
-  const normalizedPath = join(CLAWD_ROOT, filePath);
-  if (!normalizedPath.startsWith(CLAWD_ROOT)) {
+  const normalizedPath = resolve(root, filePath);
+  if (!normalizedPath.startsWith(root)) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 

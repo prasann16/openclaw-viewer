@@ -8,17 +8,37 @@ export interface FileNode {
   children?: FileNode[];
 }
 
-const CLAWD_ROOT = process.env.CLAWD_ROOT || "/home/clawdbot/clawd";
+export interface Workspace {
+  id: string;
+  name: string;
+  path: string;
+}
 
-function getClawdRoot(): string {
-  return path.resolve(CLAWD_ROOT);
+// Available workspaces - add more as needed
+export const WORKSPACES: Workspace[] = [
+  { id: "main", name: "Main (Clawd)", path: "/home/clawdbot/clawd" },
+  { id: "myreader", name: "MyReader Bot", path: "/home/clawdbot/clawd-myreader" },
+  { id: "creator", name: "Creator Bot", path: "/home/clawdbot/clawd-creator" },
+  { id: "trader", name: "Trader Bot", path: "/home/clawdbot/trader" },
+];
+
+const DEFAULT_WORKSPACE = process.env.CLAWD_ROOT || "/home/clawdbot/clawd";
+
+export function getWorkspaceRoot(workspaceId?: string): string {
+  if (!workspaceId) return path.resolve(DEFAULT_WORKSPACE);
+  const workspace = WORKSPACES.find(w => w.id === workspaceId);
+  return path.resolve(workspace?.path || DEFAULT_WORKSPACE);
 }
 
 export async function getFileTree(
-  dir: string = getClawdRoot(),
+  workspaceId?: string,
+  dir?: string,
   basePath: string = ""
 ): Promise<FileNode[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const root = getWorkspaceRoot(workspaceId);
+  const targetDir = dir || root;
+  
+  const entries = await fs.readdir(targetDir, { withFileTypes: true });
   const nodes: FileNode[] = [];
 
   for (const entry of entries) {
@@ -29,7 +49,8 @@ export async function getFileTree(
 
     if (entry.isDirectory()) {
       const children = await getFileTree(
-        path.join(dir, entry.name),
+        workspaceId,
+        path.join(targetDir, entry.name),
         relativePath
       );
       // Only include folders that contain files (directly or nested)
@@ -60,9 +81,10 @@ export async function getFileTree(
 }
 
 export async function readFileContent(
-  filePath: string
+  filePath: string,
+  workspaceId?: string
 ): Promise<{ content: string; path: string }> {
-  const root = getClawdRoot();
+  const root = getWorkspaceRoot(workspaceId);
   const resolved = path.resolve(root, filePath);
 
   // Path traversal protection
@@ -80,9 +102,10 @@ export async function readFileContent(
 
 export async function writeFileContent(
   filePath: string,
-  content: string
+  content: string,
+  workspaceId?: string
 ): Promise<void> {
-  const root = getClawdRoot();
+  const root = getWorkspaceRoot(workspaceId);
   const resolved = path.resolve(root, filePath);
 
   // Path traversal protection

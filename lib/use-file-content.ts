@@ -12,11 +12,12 @@ interface FileContentState {
   refetch: () => void;
 }
 
-export function useFileContent(path: string | null): FileContentState {
-  const [result, setResult] = useState<FetchResult & { path: string | null }>({
+export function useFileContent(path: string | null, workspace?: string): FileContentState {
+  const [result, setResult] = useState<FetchResult & { path: string | null; workspace: string | undefined }>({
     content: null,
     error: null,
     path: null,
+    workspace: undefined,
   });
   const [fetchKey, setFetchKey] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
@@ -28,7 +29,10 @@ export function useFileContent(path: string | null): FileContentState {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    fetch(`/api/file?path=${encodeURIComponent(path)}`, {
+    const params = new URLSearchParams({ path });
+    if (workspace) params.set("workspace", workspace);
+
+    fetch(`/api/file?${params.toString()}`, {
       signal: controller.signal,
     })
       .then((res) => {
@@ -37,17 +41,17 @@ export function useFileContent(path: string | null): FileContentState {
       })
       .then((data) => {
         if (!controller.signal.aborted) {
-          setResult({ content: data.content, error: null, path });
+          setResult({ content: data.content, error: null, path, workspace });
         }
       })
       .catch((err) => {
         if (!controller.signal.aborted) {
-          setResult({ content: null, error: err.message, path });
+          setResult({ content: null, error: err.message, path, workspace });
         }
       });
 
     return () => controller.abort();
-  }, [path, fetchKey]);
+  }, [path, workspace, fetchKey]);
 
   const refetch = useCallback(() => {
     setFetchKey((k) => k + 1);
@@ -57,8 +61,8 @@ export function useFileContent(path: string | null): FileContentState {
     return { content: null, loading: false, error: null, refetch };
   }
 
-  // If the result is for a different path, we're still loading
-  if (result.path !== path) {
+  // If the result is for a different path/workspace, we're still loading
+  if (result.path !== path || result.workspace !== workspace) {
     return { content: null, loading: true, error: null, refetch };
   }
 
