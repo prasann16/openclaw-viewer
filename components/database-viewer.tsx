@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Database,
   Loader2,
+  X,
 } from "lucide-react";
 
 interface TableInfo {
@@ -31,6 +32,7 @@ export function DatabaseViewer() {
   const [loadingTables, setLoadingTables] = useState(true);
   const [loadingRows, setLoadingRows] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
 
   // Fetch tables on mount
   useEffect(() => {
@@ -155,7 +157,8 @@ export function DatabaseViewer() {
                 {tableData.rows.map((row, i) => (
                   <tr
                     key={i}
-                    className="border-b border-border last:border-0 hover:bg-muted/30"
+                    onClick={() => setSelectedRow(row)}
+                    className="border-b border-border last:border-0 hover:bg-muted/30 cursor-pointer"
                   >
                     {tableData.columns.map((col) => (
                       <td
@@ -221,6 +224,45 @@ export function DatabaseViewer() {
           )}
         </>
       ) : null}
+
+      {/* Row Detail Modal */}
+      {selectedRow && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedRow(null)}
+        >
+          <div 
+            className="relative max-h-[80vh] w-full max-w-2xl overflow-auto rounded-lg border border-border bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedRow(null)}
+              className="absolute right-4 top-4 rounded-md p-1 hover:bg-muted"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            
+            <h3 className="mb-4 text-lg font-semibold">Row Details</h3>
+            
+            <div className="space-y-3">
+              {tableData?.columns.map((col) => (
+                <div key={col} className="rounded-md border border-border bg-muted/30 p-3">
+                  <div className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {col}
+                  </div>
+                  <div className="whitespace-pre-wrap break-words font-mono text-sm">
+                    {selectedRow[col] === null ? (
+                      <span className="italic text-muted-foreground">null</span>
+                    ) : (
+                      String(selectedRow[col])
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

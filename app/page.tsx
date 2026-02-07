@@ -6,10 +6,10 @@ import { Sidebar } from "@/components/sidebar";
 import type { TabId } from "@/components/nav-tabs";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { CodeViewer } from "@/components/code-viewer";
+import { ImageViewer } from "@/components/image-viewer";
 import { DatabaseViewer } from "@/components/database-viewer";
 import { CronViewer } from "@/components/cron-viewer";
-import { LogsViewer } from "@/components/logs-viewer";
-import { SystemStats } from "@/components/system-stats";
+import { SystemViewer } from "@/components/system-viewer";
 import { FileText, Loader2, Menu, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +20,22 @@ import {
 import { useFileContent } from "@/lib/use-file-content";
 import { toast } from "sonner";
 
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico"];
+
+function isImageFile(path: string | null): boolean {
+  if (!path) return false;
+  const ext = path.toLowerCase().slice(path.lastIndexOf("."));
+  return IMAGE_EXTENSIONS.includes(ext);
+}
+
 function ViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPath = searchParams.get("file");
-  const { content, loading, error, refetch } = useFileContent(selectedPath);
-  const [activeTab, setActiveTab] = useState<TabId>("files");
+  const isImage = isImageFile(selectedPath);
+  // Only fetch content for non-image files
+  const { content, loading, error, refetch } = useFileContent(isImage ? null : selectedPath);
+  const [activeTab, setActiveTab] = useState<TabId>("system");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
@@ -56,12 +66,105 @@ function ViewerContent() {
 
   const handleSelect = useCallback(
     (path: string) => {
-      router.push(`?file=${encodeURIComponent(path)}`);
+      // Use replace with scroll: false for smoother navigation
+      router.replace(`?file=${encodeURIComponent(path)}`, { scroll: false });
       setSheetOpen(false);
       setIsEditing(false);
     },
     [router]
   );
+
+  const renderFileContent = () => {
+    if (!selectedPath) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+          <FileText className="h-12 w-12" />
+          <p>Select a file to view</p>
+        </div>
+      );
+    }
+
+    // Handle images separately (no content loading needed)
+    if (isImage) {
+      return <ImageViewer path={selectedPath} />;
+    }
+
+    if (loading) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <p className="text-destructive">{error}</p>
+        </div>
+      );
+    }
+
+    if (content === null) {
+      return null;
+    }
+
+    // Markdown files with edit support
+    if (selectedPath.endsWith(".md")) {
+      if (isEditing) {
+        return (
+          <div className="mx-auto max-w-3xl">
+            <div className="flex h-full flex-col gap-4">
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                  {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+              <textarea
+                className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+              />
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditContent(content);
+                setIsEditing(true);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
+          <MarkdownViewer content={content} />
+        </div>
+      );
+    }
+
+    // Code files - full width for better readability
+    return (
+      <div className="mx-auto max-w-6xl">
+        <CodeViewer content={content} filePath={selectedPath} />
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-screen">
@@ -95,76 +198,14 @@ function ViewerContent() {
         </div>
 
         <main className="flex-1 overflow-auto p-8">
-          {activeTab === "files" ? (
-            !selectedPath ? (
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-                <FileText className="h-12 w-12" />
-                <p>Select a file to view</p>
-              </div>
-            ) : loading ? (
-              <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : error ? (
-              <div className="flex h-full items-center justify-center">
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : content !== null ? (
-              <div className="mx-auto max-w-3xl">
-                {selectedPath?.endsWith(".md") ? (
-                  isEditing ? (
-                    <div className="flex h-full flex-col gap-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsEditing(false)}
-                          disabled={isSaving}
-                        >
-                          Cancel
-                        </Button>
-                        <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                          {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                          {isSaving ? "Saving..." : "Save"}
-                        </Button>
-                      </div>
-                      <textarea
-                        className="min-h-[calc(100vh-12rem)] w-full flex-1 resize-y rounded-md border border-input bg-muted p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-4 flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditContent(content);
-                            setIsEditing(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </Button>
-                      </div>
-                      <MarkdownViewer content={content} />
-                    </>
-                  )
-                ) : (
-                  <CodeViewer content={content} filePath={selectedPath!} />
-                )}
-              </div>
-            ) : null
+          {activeTab === "system" ? (
+            <SystemViewer />
+          ) : activeTab === "files" ? (
+            renderFileContent()
           ) : activeTab === "database" ? (
             <DatabaseViewer />
           ) : activeTab === "cron" ? (
             <CronViewer />
-          ) : activeTab === "logs" ? (
-            <LogsViewer />
-          ) : activeTab === "system" ? (
-            <SystemStats />
           ) : null}
         </main>
       </div>

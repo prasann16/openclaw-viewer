@@ -11,7 +11,7 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ content }: MarkdownViewerProps) {
   return (
-    <article className="prose prose-invert max-w-none prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-border prose-code:text-zinc-300">
+    <article className="prose dark:prose-invert max-w-none prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-border prose-code:text-zinc-700 dark:prose-code:text-zinc-300">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}

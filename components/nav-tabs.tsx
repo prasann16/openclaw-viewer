@@ -4,18 +4,16 @@ import {
   FolderOpen,
   Database,
   Clock,
-  ScrollText,
   Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type TabId = "files" | "database" | "cron" | "logs" | "system";
+export type TabId = "files" | "database" | "cron" | "system";
 
 const tabs: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "files", label: "Files", icon: FolderOpen },
   { id: "database", label: "Database", icon: Database },
   { id: "cron", label: "Cron", icon: Clock },
-  { id: "logs", label: "Logs", icon: ScrollText },
   { id: "system", label: "System", icon: Activity },
 ];
 

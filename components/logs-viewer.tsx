@@ -2,18 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Pause, Play, ScrollText, Trash2 } from "lucide-react";
+import { Loader2, Pause, Play, ScrollText, Trash2, RefreshCw } from "lucide-react";
 
-const MAX_LINES = 100;
+type LogSource = "journal" | "file" | "all";
 
 export function LogsViewer() {
   const [lines, setLines] = useState<string[]>([]);
-  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [source, setSource] = useState<LogSource>("journal");
   const containerRef = useRef<HTMLPreElement | null>(null);
   const autoScrollRef = useRef(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = useCallback(() => {
     if (autoScrollRef.current && containerRef.current) {
@@ -21,70 +23,36 @@ export function LogsViewer() {
     }
   }, []);
 
-  const connect = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
-    const es = new EventSource("/api/logs");
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-      setConnected(true);
+  const fetchLogs = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/logs?source=${source}&limit=200`);
+      if (!res.ok) throw new Error("Failed to fetch logs");
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setLines(data.logs || []);
+      setLastUpdate(data.timestamp);
       setError(null);
-    };
-
-    es.onmessage = (event) => {
-      setLines((prev) => {
-        const next = [...prev, event.data];
-        return next.length > MAX_LINES ? next.slice(-MAX_LINES) : next;
-      });
-    };
-
-    es.addEventListener("error", (event) => {
-      if (event instanceof MessageEvent) {
-        setError(event.data);
-      }
-    });
-
-    es.onerror = () => {
-      setConnected(false);
-      // EventSource will auto-reconnect by default
-    };
-  }, []);
-
-  const disconnect = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch logs");
+    } finally {
+      setLoading(false);
     }
-    setConnected(false);
-  }, []);
+  }, [source]);
 
-  const handlePauseResume = useCallback(() => {
-    if (paused) {
-      connect();
-      setPaused(false);
-    } else {
-      disconnect();
-      setPaused(true);
-    }
-  }, [paused, connect, disconnect]);
-
-  const handleClear = useCallback(() => {
-    setLines([]);
-  }, []);
-
-  // Connect on mount, disconnect on unmount
+  // Initial fetch and polling
   useEffect(() => {
-    connect();
+    fetchLogs();
+    
+    if (!paused) {
+      intervalRef.current = setInterval(fetchLogs, 3000); // Poll every 3s
+    }
+    
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
-  }, [connect]);
+  }, [fetchLogs, paused]);
 
   // Auto-scroll when new lines arrive
   useEffect(() => {
@@ -98,19 +66,68 @@ export function LogsViewer() {
     autoScrollRef.current = scrollHeight - scrollTop - clientHeight < 40;
   }, []);
 
+  const handlePauseResume = useCallback(() => {
+    setPaused(prev => !prev);
+  }, []);
+
+  const handleClear = useCallback(() => {
+    setLines([]);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setLoading(true);
+    fetchLogs();
+  }, [fetchLogs]);
+
+  if (loading && lines.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <ScrollText className="h-12 w-12" />
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <p>Loading logs...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Live Logs</h2>
+          <h2 className="text-lg font-semibold">Gateway Logs</h2>
           <span
             className={`inline-block h-2 w-2 rounded-full ${
-              connected ? "bg-green-400" : "bg-zinc-500"
+              paused ? "bg-yellow-400" : "bg-green-400"
             }`}
-            title={connected ? "Connected" : "Disconnected"}
+            title={paused ? "Paused" : "Auto-refreshing"}
           />
+          {lastUpdate && (
+            <span className="text-xs text-muted-foreground">
+              Updated: {new Date(lastUpdate).toLocaleTimeString()}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <select
+            value={source}
+            onChange={(e) => {
+              setSource(e.target.value as LogSource);
+              setLoading(true);
+            }}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="journal">Gateway (journalctl)</option>
+            <option value="file">File Logs</option>
+            <option value="all">All Sources</option>
+          </select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -138,16 +155,10 @@ export function LogsViewer() {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      {lines.length === 0 && !connected && !paused ? (
+      {lines.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
           <ScrollText className="h-12 w-12" />
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <p>Connecting to log stream...</p>
-        </div>
-      ) : lines.length === 0 && connected ? (
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-          <ScrollText className="h-12 w-12" />
-          <p>Waiting for log output...</p>
+          <p>No logs found</p>
         </div>
       ) : (
         <pre
@@ -156,7 +167,7 @@ export function LogsViewer() {
           className="flex-1 overflow-auto rounded-lg border border-border bg-zinc-950 p-4 font-mono text-xs leading-relaxed text-green-400"
         >
           {lines.map((line, i) => (
-            <div key={i}>{line || "\u00A0"}</div>
+            <div key={i} className="whitespace-pre-wrap break-all">{line || "\u00A0"}</div>
           ))}
         </pre>
       )}

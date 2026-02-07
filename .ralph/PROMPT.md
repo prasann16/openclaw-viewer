@@ -62,39 +62,120 @@ Do not output COMPLETE until PR is created.
 
 # Feature Spec
 
-# Clawd Viewer v2 — Dark/Light Toggle + Edit Mode
+# Clawd Viewer v3 — Visibility Pack
 
-Add two features to the existing clawd-viewer app.
+Add tabs/sections for viewing all server data: files, database, cron, logs, system stats.
 
-## Feature 1: Dark/Light Mode Toggle
+## Navigation
 
-- Add a theme toggle button in the sidebar header (sun/moon icon)
-- Use next-themes for theme management
-- Store preference in localStorage
-- Default to dark mode
-- Toggle should be smooth (no flash on page load)
+Add a vertical nav/tabs in the sidebar above the file tree:
+- 📁 Files (current functionality)
+- 🗄️ Database (new)
+- ⏰ Cron (new)
+- 📜 Logs (new)
+- 📊 System (new)
 
-## Feature 2: File Editing
+Clicking a nav item shows that section in the main area.
 
-- Add an "Edit" button when viewing a file
-- Clicking Edit switches the markdown viewer to a textarea editor
-- Editor should be a nice code editor feel (monospace font, proper sizing)
-- Add "Save" and "Cancel" buttons when in edit mode
-- Save calls POST /api/file to write the file
-- Show loading state while saving
-- Show success/error toast after save
-- Return to view mode after successful save
+## Feature 1: All File Types
 
-## API Changes
+Update the file tree to show ALL files (not just .md).
+- Use appropriate syntax highlighting based on file extension
+- Support: .json, .ts, .tsx, .js, .jsx, .py, .sh, .yaml, .yml, .toml, .env, .txt, .css, .html
+- Use highlight.js or shiki with language detection
+- Keep the existing markdown rendering for .md files
 
-### POST /api/file
-- Body: { path: string, content: string }
-- Validates path is within CLAWD_ROOT
-- Writes content to file
-- Returns { success: true } or error
+## Feature 2: SQLite Database Viewer
 
-## UI Notes
-- Keep it minimal — just add what's needed
-- Theme toggle: small icon button, top right of sidebar header
-- Edit button: top right of the content area, only shows when file is selected
-- Use existing shadcn components (Button, Textarea if available)
+Show contents of ~/clawd/memory/clawd.db
+
+API endpoint: GET /api/database
+- Returns list of tables
+- For each table, returns schema and row count
+
+API endpoint: GET /api/database/[table]?limit=50&offset=0
+- Returns rows from that table with pagination
+
+UI:
+- Show tabs for each table (sessions, events, decisions, messages)
+- Display as a nice table with columns
+- Pagination controls
+- Show total count
+
+## Feature 3: Cron Jobs Viewer
+
+Show Clawdbot cron jobs.
+
+API endpoint: GET /api/cron
+- Runs: clawdbot cron list --json
+- Returns jobs array
+
+API endpoint: POST /api/cron/[id]/toggle
+- Enables or disables a job
+
+API endpoint: POST /api/cron/[id]/run
+- Runs a job immediately
+
+UI:
+- Table showing: name, schedule, last run, status, enabled toggle
+- "Run Now" button for each job
+- Auto-refresh every 30s
+
+## Feature 4: Live Logs Viewer
+
+Stream gateway logs in real-time.
+
+API endpoint: GET /api/logs (Server-Sent Events)
+- Runs: tail -f ~/.clawdbot/logs/gateway.log
+- Streams new lines as SSE events
+
+UI:
+- Dark terminal-style log viewer
+- Auto-scroll to bottom
+- Pause/resume button
+- Clear button
+- Show last 100 lines initially
+
+## Feature 5: System Stats
+
+Show server resource usage.
+
+API endpoint: GET /api/system
+- Returns: CPU %, RAM used/total, Disk used/total
+- Get via: node os module or run shell commands
+
+UI:
+- Three progress bars with labels
+- CPU: X%
+- RAM: X GB / Y GB (Z%)
+- Disk: X GB / Y GB (Z%)
+- Auto-refresh every 5s
+- Show uptime
+
+## File Structure Changes
+
+```
+app/
+├── api/
+│   ├── database/
+│   │   ├── route.ts        # GET tables list
+│   │   └── [table]/route.ts # GET table rows
+│   ├── cron/
+│   │   ├── route.ts        # GET jobs list
+│   │   └── [id]/
+│   │       ├── toggle/route.ts
+│   │       └── run/route.ts
+│   ├── logs/route.ts       # SSE log stream
+│   └── system/route.ts     # GET system stats
+components/
+├── nav-tabs.tsx            # Vertical navigation
+├── database-viewer.tsx     # SQLite browser
+├── cron-viewer.tsx         # Cron jobs list
+├── logs-viewer.tsx         # Live log tail
+├── system-stats.tsx        # Resource bars
+└── code-viewer.tsx         # Syntax highlighted code
+```
+
+## Dependencies to Add
+- better-sqlite3 (for SQLite access)
+- Possibly: os-utils or just use Node's os module

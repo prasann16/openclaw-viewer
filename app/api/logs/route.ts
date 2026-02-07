@@ -1,74 +1,67 @@
-import { spawn } from "child_process";
-import { homedir } from "os";
-import { join } from "path";
+import { NextResponse } from "next/server";
+import { exec } from "child_process";
+import { promisify } from "util";
 
-const LOG_FILE = join(homedir(), ".clawdbot", "logs", "gateway.log");
+const execAsync = promisify(exec);
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const encoder = new TextEncoder();
+// Fetch logs from multiple sources
+async function getJournalLogs(lines: number): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync(
+      `journalctl --user -u clawdbot-gateway --no-pager -n ${lines} 2>/dev/null`,
+      { timeout: 10000, maxBuffer: 2 * 1024 * 1024 }
+    );
+    return stdout.split("\n").filter(line => line.trim());
+  } catch {
+    return [];
+  }
+}
 
-  const stream = new ReadableStream({
-    start(controller) {
-      // First send the last 100 lines, then follow
-      const tail = spawn("tail", ["-n", "100", "-f", LOG_FILE], {
-        stdio: ["ignore", "pipe", "pipe"],
-      });
+async function getFileLogs(lines: number): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync(
+      `clawdbot logs --plain --limit ${lines} 2>/dev/null | tail -${lines}`,
+      { timeout: 10000, maxBuffer: 1024 * 1024 }
+    );
+    return stdout.split("\n").filter(line => line.trim());
+  } catch {
+    return [];
+  }
+}
 
-      let buffer = "";
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const source = searchParams.get("source") || "journal"; // journal, file, or all
+  const limit = Math.min(parseInt(searchParams.get("limit") || "150"), 500);
 
-      tail.stdout.on("data", (data: Buffer) => {
-        buffer += data.toString();
-        const lines = buffer.split("\n");
-        // Keep the last incomplete line in the buffer
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          controller.enqueue(encoder.encode(`data: ${line}\n\n`));
-        }
-      });
+  try {
+    let logs: string[] = [];
 
-      tail.stderr.on("data", (data: Buffer) => {
-        const msg = data.toString().trim();
-        controller.enqueue(
-          encoder.encode(`event: error\ndata: ${msg}\n\n`)
-        );
-      });
+    if (source === "journal" || source === "all") {
+      const journalLogs = await getJournalLogs(limit);
+      logs = logs.concat(journalLogs);
+    }
 
-      tail.on("close", () => {
-        // Flush any remaining buffer
-        if (buffer) {
-          controller.enqueue(encoder.encode(`data: ${buffer}\n\n`));
-        }
-        controller.close();
-      });
-
-      tail.on("error", (err) => {
-        controller.enqueue(
-          encoder.encode(`event: error\ndata: ${err.message}\n\n`)
-        );
-        controller.close();
-      });
-
-      // Clean up on cancel (client disconnect)
-      controller.enqueue(encoder.encode(": connected\n\n"));
-
-      // Store cleanup function for cancel
-      (stream as unknown as { _tailProcess: typeof tail })._tailProcess = tail;
-    },
-    cancel() {
-      const proc = (stream as unknown as { _tailProcess: ReturnType<typeof spawn> })._tailProcess;
-      if (proc && !proc.killed) {
-        proc.kill();
+    if (source === "file" || source === "all") {
+      const fileLogs = await getFileLogs(limit);
+      if (source === "all" && fileLogs.length > 0) {
+        logs.push("", "--- File Logs (clawdbot logs) ---", "");
       }
-    },
-  });
+      logs = logs.concat(fileLogs);
+    }
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+    return NextResponse.json({
+      logs,
+      source,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to fetch logs";
+    return NextResponse.json(
+      { error: message, logs: [] },
+      { status: 500 }
+    );
+  }
 }
