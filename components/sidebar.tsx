@@ -61,36 +61,38 @@ export function Sidebar({ selectedPath, onSelect, activeTab, onTabChange, worksp
         <h1 className="text-lg font-semibold tracking-tight">OpenClaw</h1>
         <ThemeToggle />
       </div>
+      
+      {/* Workspace selector - always visible */}
+      <div className="border-b border-border p-2">
+        <WorkspaceSelector
+          workspaces={workspaces}
+          selected={workspace}
+          onSelect={handleWorkspaceChange}
+        />
+      </div>
+      
       <NavTabs activeTab={activeTab} onTabChange={onTabChange} />
+      
       {activeTab === "files" && (
-        <>
-          <div className="border-b border-border p-2">
-            <WorkspaceSelector
-              workspaces={workspaces}
-              selected={workspace}
-              onSelect={handleWorkspaceChange}
-            />
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <p className="px-2 text-sm text-destructive">{error}</p>
+            ) : tree.length === 0 ? (
+              <p className="px-2 text-sm text-muted-foreground">No files found</p>
+            ) : (
+              <FileTree
+                tree={tree}
+                selectedPath={selectedPath}
+                onSelect={onSelect}
+              />
+            )}
           </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : error ? (
-                <p className="px-2 text-sm text-destructive">{error}</p>
-              ) : tree.length === 0 ? (
-                <p className="px-2 text-sm text-muted-foreground">No files found</p>
-              ) : (
-                <FileTree
-                  tree={tree}
-                  selectedPath={selectedPath}
-                  onSelect={onSelect}
-                />
-              )}
-            </div>
-          </ScrollArea>
-        </>
+        </ScrollArea>
       )}
     </div>
   );
