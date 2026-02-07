@@ -35,7 +35,7 @@ function ViewerContent() {
   const isImage = isImageFile(selectedPath);
   // Only fetch content for non-image files
   const { content, loading, error, refetch } = useFileContent(isImage ? null : selectedPath);
-  const [activeTab, setActiveTab] = useState<TabId>("system");
+  const [activeTab, setActiveTab] = useState<TabId>("files");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
