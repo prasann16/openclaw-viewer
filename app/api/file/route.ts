@@ -3,6 +3,7 @@ import { readFileContent, writeFileContent } from "@/lib/files";
 
 export async function GET(request: NextRequest) {
   const filePath = request.nextUrl.searchParams.get("path");
+  const workspace = request.nextUrl.searchParams.get("workspace") || undefined;
 
   if (!filePath) {
     return NextResponse.json(
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await readFileContent(filePath);
+    const result = await readFileContent(filePath, workspace);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof Error) {
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { path?: string; content?: string };
+  let body: { path?: string; content?: string; workspace?: string };
   try {
     body = await request.json();
   } catch {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { path: filePath, content } = body;
+  const { path: filePath, content, workspace } = body;
 
   if (!filePath || typeof content !== "string") {
     return NextResponse.json(
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await writeFileContent(filePath, content);
+    await writeFileContent(filePath, content, workspace);
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Error) {

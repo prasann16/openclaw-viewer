@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 
 interface ImageViewerProps {
   path: string;
+  workspace?: string;
 }
 
-export function ImageViewer({ path }: ImageViewerProps) {
+export function ImageViewer({ path, workspace }: ImageViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
 
-  const imageSrc = `/api/image?path=${encodeURIComponent(path)}`;
+  const params = new URLSearchParams({ path });
+  if (workspace) params.set("workspace", workspace);
+  const imageSrc = `/api/image?${params.toString()}`;
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 25, 300));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 25, 25));
