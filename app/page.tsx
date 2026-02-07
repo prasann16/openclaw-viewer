@@ -197,7 +197,7 @@ function ViewerContent() {
           </span>
         </div>
 
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto px-8 pt-8">
           {activeTab === "system" ? (
             <SystemViewer />
           ) : activeTab === "files" ? (
