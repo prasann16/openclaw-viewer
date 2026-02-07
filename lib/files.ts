@@ -128,3 +128,25 @@ export async function writeFileContent(
 
   await fs.writeFile(resolved, content, "utf-8");
 }
+
+export async function deleteFile(
+  filePath: string,
+  workspaceId?: string
+): Promise<void> {
+  const root = getWorkspaceRoot(workspaceId);
+  const resolved = path.resolve(root, filePath);
+
+  // Path traversal protection
+  if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+    throw new Error("FORBIDDEN");
+  }
+
+  // Ensure file exists
+  try {
+    await fs.access(resolved);
+  } catch {
+    throw new Error("NOT_FOUND");
+  }
+
+  await fs.unlink(resolved);
+}

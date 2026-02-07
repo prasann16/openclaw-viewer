@@ -10,7 +10,7 @@ import { ImageViewer } from "@/components/image-viewer";
 import { DatabaseViewer } from "@/components/database-viewer";
 import { CronViewer } from "@/components/cron-viewer";
 import { SystemViewer } from "@/components/system-viewer";
-import { FileText, Loader2, Menu, Pencil } from "lucide-react";
+import { FileText, Loader2, Menu, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,6 +42,8 @@ function ViewerContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(0); // 0 = none, 1 = first click, 2 = confirmed
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSave = useCallback(async () => {
     if (!selectedPath) return;
@@ -65,6 +67,42 @@ function ViewerContent() {
       setIsSaving(false);
     }
   }, [selectedPath, editContent, workspace, refetch]);
+
+  const handleDelete = useCallback(async () => {
+    if (!selectedPath) return;
+    
+    if (deleteConfirm === 0) {
+      setDeleteConfirm(1);
+      // Reset after 3 seconds if not confirmed
+      setTimeout(() => setDeleteConfirm(0), 3000);
+      return;
+    }
+    
+    if (deleteConfirm === 1) {
+      setDeleteConfirm(2);
+      setIsDeleting(true);
+      try {
+        const params = new URLSearchParams({ path: selectedPath });
+        if (workspace) params.set("workspace", workspace);
+        
+        const res = await fetch(`/api/file?${params.toString()}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to delete");
+        }
+        toast.success("File deleted");
+        // Clear selection
+        router.replace(`?workspace=${workspace}`, { scroll: false });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete file");
+      } finally {
+        setIsDeleting(false);
+        setDeleteConfirm(0);
+      }
+    }
+  }, [selectedPath, workspace, deleteConfirm, router]);
 
   const handleSelect = useCallback(
     (path: string) => {
@@ -151,7 +189,7 @@ function ViewerContent() {
       }
       return (
         <div className="mx-auto max-w-3xl">
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-end gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -163,6 +201,19 @@ function ViewerContent() {
               <Pencil className="h-4 w-4" />
               Edit
             </Button>
+            <Button
+              variant={deleteConfirm === 1 ? "destructive" : "ghost"}
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {deleteConfirm === 1 ? "Confirm Delete" : "Delete"}
+            </Button>
           </div>
           <MarkdownViewer content={content} />
         </div>
@@ -172,6 +223,21 @@ function ViewerContent() {
     // Code files - full width for better readability
     return (
       <div className="mx-auto max-w-6xl">
+        <div className="mb-4 flex justify-end">
+          <Button
+            variant={deleteConfirm === 1 ? "destructive" : "ghost"}
+            size="sm"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            {deleteConfirm === 1 ? "Confirm Delete" : "Delete"}
+          </Button>
+        </div>
         <CodeViewer content={content} filePath={selectedPath} />
       </div>
     );
