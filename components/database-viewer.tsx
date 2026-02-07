@@ -4,12 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Database,
   Loader2,
   X,
 } from "lucide-react";
+
+interface DatabaseInfo {
+  name: string;
+  path: string;
+}
 
 interface TableInfo {
   name: string;
@@ -24,37 +30,79 @@ interface TableData {
 
 const PAGE_SIZE = 50;
 
-export function DatabaseViewer() {
+interface DatabaseViewerProps {
+  workspace: string;
+}
+
+export function DatabaseViewer({ workspace }: DatabaseViewerProps) {
+  const [databases, setDatabases] = useState<DatabaseInfo[]>([]);
+  const [selectedDb, setSelectedDb] = useState<DatabaseInfo | null>(null);
   const [tables, setTables] = useState<TableInfo[]>([]);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [tableData, setTableData] = useState<TableData | null>(null);
   const [offset, setOffset] = useState(0);
-  const [loadingTables, setLoadingTables] = useState(true);
+  const [loadingDbs, setLoadingDbs] = useState(true);
+  const [loadingTables, setLoadingTables] = useState(false);
   const [loadingRows, setLoadingRows] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
+  const [dbDropdownOpen, setDbDropdownOpen] = useState(false);
 
-  // Fetch tables on mount
+  // Fetch databases when workspace changes
   useEffect(() => {
-    fetch("/api/database")
+    setLoadingDbs(true);
+    setDatabases([]);
+    setSelectedDb(null);
+    setTables([]);
+    setSelectedTable(null);
+    setTableData(null);
+    setError(null);
+
+    fetch(`/api/database?workspace=${workspace}`)
       .then((res) => res.json())
       .then((data) => {
-        setTables(data.tables || []);
-        if (data.tables?.length > 0) {
-          setSelectedTable(data.tables[0].name);
+        const dbs = data.databases || [];
+        setDatabases(dbs);
+        if (dbs.length > 0) {
+          setSelectedDb(dbs[0]);
         }
       })
-      .catch(() => setError("Failed to load database tables"))
+      .catch(() => setError("Failed to load databases"))
+      .finally(() => setLoadingDbs(false));
+  }, [workspace]);
+
+  // Fetch tables when database changes
+  useEffect(() => {
+    if (!selectedDb) {
+      setTables([]);
+      return;
+    }
+
+    setLoadingTables(true);
+    setTables([]);
+    setSelectedTable(null);
+    setTableData(null);
+
+    fetch(`/api/database?db=${encodeURIComponent(selectedDb.path)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const tbls = data.tables || [];
+        setTables(tbls);
+        if (tbls.length > 0) {
+          setSelectedTable(tbls[0].name);
+        }
+      })
+      .catch(() => setError("Failed to load tables"))
       .finally(() => setLoadingTables(false));
-  }, []);
+  }, [selectedDb]);
 
   // Fetch rows when table or offset changes
-  const fetchRows = useCallback(async (table: string, rowOffset: number) => {
+  const fetchRows = useCallback(async (dbPath: string, table: string, rowOffset: number) => {
     setLoadingRows(true);
     setError(null);
     try {
       const res = await fetch(
-        `/api/database/${encodeURIComponent(table)}?limit=${PAGE_SIZE}&offset=${rowOffset}`
+        `/api/database/${encodeURIComponent(table)}?db=${encodeURIComponent(dbPath)}&limit=${PAGE_SIZE}&offset=${rowOffset}`
       );
       if (!res.ok) throw new Error("Failed to fetch rows");
       const data = await res.json();
@@ -68,20 +116,37 @@ export function DatabaseViewer() {
   }, []);
 
   useEffect(() => {
-    if (selectedTable) {
-      fetchRows(selectedTable, offset);
+    if (selectedDb && selectedTable) {
+      fetchRows(selectedDb.path, selectedTable, offset);
     }
-  }, [selectedTable, offset, fetchRows]);
+  }, [selectedDb, selectedTable, offset, fetchRows]);
 
   const handleTableSelect = (name: string) => {
     setSelectedTable(name);
     setOffset(0);
+    setSelectedRow(null);
   };
 
-  if (loadingTables) {
+  const handleDbSelect = (db: DatabaseInfo) => {
+    setSelectedDb(db);
+    setDbDropdownOpen(false);
+    setOffset(0);
+    setSelectedRow(null);
+  };
+
+  if (loadingDbs) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (databases.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <Database className="h-12 w-12" />
+        <p>No databases found in this workspace</p>
       </div>
     );
   }
@@ -95,15 +160,6 @@ export function DatabaseViewer() {
     );
   }
 
-  if (tables.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Database className="h-12 w-12" />
-        <p>No tables found</p>
-      </div>
-    );
-  }
-
   const totalPages = tableData ? Math.ceil(tableData.total / PAGE_SIZE) : 0;
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const startRow = offset + 1;
@@ -113,24 +169,65 @@ export function DatabaseViewer() {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      {/* Table tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-border pb-2">
-        {tables.map((t) => (
+      {/* Database selector */}
+      {databases.length > 1 && (
+        <div className="relative">
           <button
-            key={t.name}
-            onClick={() => handleTableSelect(t.name)}
-            className={cn(
-              "shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              selectedTable === t.name
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50"
-            )}
+            onClick={() => setDbDropdownOpen(!dbDropdownOpen)}
+            className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium hover:bg-muted"
           >
-            {t.name}
-            <span className="ml-1.5 text-xs opacity-60">({t.rowCount})</span>
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-muted-foreground" />
+              <span className="truncate">{selectedDb?.name}</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${dbDropdownOpen ? "rotate-180" : ""}`} />
           </button>
-        ))}
-      </div>
+          
+          {dbDropdownOpen && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-border bg-background shadow-lg">
+              {databases.map((db) => (
+                <button
+                  key={db.path}
+                  onClick={() => handleDbSelect(db)}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted ${
+                    db.path === selectedDb?.path ? "bg-muted font-medium" : ""
+                  }`}
+                >
+                  <Database className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{db.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Table tabs */}
+      {loadingTables ? (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : tables.length > 0 ? (
+        <div className="flex gap-1 overflow-x-auto border-b border-border pb-2">
+          {tables.map((t) => (
+            <button
+              key={t.name}
+              onClick={() => handleTableSelect(t.name)}
+              className={cn(
+                "shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                selectedTable === t.name
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent/50"
+              )}
+            >
+              {t.name}
+              <span className="ml-1.5 text-xs opacity-60">({t.rowCount})</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="py-4 text-center text-muted-foreground">No tables found</div>
+      )}
 
       {/* Table content */}
       {loadingRows ? (

@@ -228,7 +228,7 @@ function ViewerContent() {
           ) : activeTab === "files" ? (
             renderFileContent()
           ) : activeTab === "database" ? (
-            <DatabaseViewer />
+            <DatabaseViewer workspace={workspace} />
           ) : activeTab === "cron" ? (
             <CronViewer />
           ) : null}

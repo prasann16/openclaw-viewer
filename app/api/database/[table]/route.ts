@@ -8,10 +8,18 @@ export async function GET(
   try {
     const { table } = await params;
     const { searchParams } = new URL(request.url);
+    const dbPath = searchParams.get("db");
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const result = getTableRows(table, limit, offset);
+    if (!dbPath) {
+      return NextResponse.json(
+        { error: "Missing 'db' parameter" },
+        { status: 400 }
+      );
+    }
+
+    const result = getTableRows(dbPath, table, limit, offset);
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof Error && err.message === "INVALID_TABLE") {
