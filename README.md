@@ -1,4 +1,4 @@
-# clawd-viewer
+# openclaw-viewer
 
 A lightweight web dashboard for monitoring [Clawdbot](https://github.com/clawdbot/clawdbot) instances. View logs, manage cron jobs, browse files, query databases, and monitor system stats — all from your browser.
 
