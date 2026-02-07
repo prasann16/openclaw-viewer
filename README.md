@@ -97,8 +97,9 @@ This dashboard has **no authentication** built-in. Here are secure ways to acces
 
 [Tailscale](https://tailscale.com) creates a private network between your devices. Free for personal use.
 
+**1. Set up on your server:**
 ```bash
-# On your server
+# Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 
@@ -109,7 +110,24 @@ tailscale ip -4
 npm run dev
 ```
 
-Then access from any device on your Tailnet: `http://100.x.x.x:3000`
+**2. Set up on your local device:**
+
+| Platform | Install |
+|----------|---------|
+| **Mac** | `brew install tailscale` or [download app](https://tailscale.com/download/mac) |
+| **Windows** | [Download installer](https://tailscale.com/download/windows) |
+| **Linux** | `curl -fsSL https://tailscale.com/install.sh \| sh` |
+| **iOS/Android** | App Store / Play Store |
+
+Then run `tailscale up` (or open the app) and sign in with the same account.
+
+**3. Connect:**
+
+Once both devices are on your Tailnet, access the viewer from your local device:
+```
+http://100.x.x.x:3000
+```
+(Use the server's Tailscale IP from step 1)
 
 **Bonus:** Add [Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve) for HTTPS:
 ```bash
