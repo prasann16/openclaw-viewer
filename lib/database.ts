@@ -1,26 +1,29 @@
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
+import { getWorkspaceRoot } from "./files";
 
-const CLAWD_ROOT = process.env.CLAWD_ROOT || "/home/clawdbot/clawd";
-const DB_PATH = path.join(CLAWD_ROOT, "memory", "clawd.db");
+function findDatabaseFiles(workspaceId?: string): string[] {
+  const root = getWorkspaceRoot(workspaceId);
+  const memoryDir = path.join(root, "memory");
+  
+  if (!fs.existsSync(memoryDir)) {
+    return [];
+  }
 
-// Whitelist of allowed table names to prevent SQL injection
-const ALLOWED_TABLES = new Set([
-  "sessions",
-  "events",
-  "decisions",
-  "messages",
-  "sqlite_sequence",
-]);
-
-function getDb(): Database.Database {
-  return new Database(DB_PATH, { readonly: true });
+  const files = fs.readdirSync(memoryDir);
+  return files
+    .filter(f => f.endsWith(".db") || f.endsWith(".sqlite"))
+    .map(f => path.join(memoryDir, f));
 }
 
-function validateTableName(table: string): void {
-  if (!ALLOWED_TABLES.has(table)) {
-    throw new Error("INVALID_TABLE");
-  }
+function getDb(dbPath: string): Database.Database {
+  return new Database(dbPath, { readonly: true });
+}
+
+export interface DatabaseInfo {
+  name: string;
+  path: string;
 }
 
 export interface TableInfo {
@@ -43,8 +46,20 @@ export interface TableRows {
   total: number;
 }
 
-export function getTables(): TableInfo[] {
-  const db = getDb();
+export function getDatabases(workspaceId?: string): DatabaseInfo[] {
+  const dbFiles = findDatabaseFiles(workspaceId);
+  return dbFiles.map(dbPath => ({
+    name: path.basename(dbPath),
+    path: dbPath,
+  }));
+}
+
+export function getTables(dbPath: string): TableInfo[] {
+  if (!fs.existsSync(dbPath)) {
+    return [];
+  }
+
+  const db = getDb(dbPath);
   try {
     const tables = db
       .prepare(
@@ -63,9 +78,8 @@ export function getTables(): TableInfo[] {
   }
 }
 
-export function getTableSchema(table: string): ColumnInfo[] {
-  validateTableName(table);
-  const db = getDb();
+export function getTableSchema(dbPath: string, table: string): ColumnInfo[] {
+  const db = getDb(dbPath);
   try {
     return db.pragma(`table_info("${table}")`) as ColumnInfo[];
   } finally {
@@ -74,17 +88,16 @@ export function getTableSchema(table: string): ColumnInfo[] {
 }
 
 export function getTableRows(
+  dbPath: string,
   table: string,
   limit: number = 50,
   offset: number = 0
 ): TableRows {
-  validateTableName(table);
-
   // Clamp limit to prevent excessive queries
   const safeLimit = Math.min(Math.max(1, limit), 200);
   const safeOffset = Math.max(0, offset);
 
-  const db = getDb();
+  const db = getDb(dbPath);
   try {
     const schema = db.pragma(`table_info("${table}")`) as ColumnInfo[];
     const columns = schema.map((col) => col.name);
